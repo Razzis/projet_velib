@@ -42,6 +42,7 @@ public:
     map<Station*, int>* charges_init_min;
     map<Station*, int>* charges_courante_max;
     map<Station*, int>* charges_courante_min;
+    map<Station*, int>* desequilibre_courant;
 
     // les stations visitées
     list<Station*>* stations;
@@ -101,6 +102,9 @@ public:
     // et les autres attributs dérivés
     // Pourrait s'appeler equilibate equilibrate, mais update est plus générique
     void update();
+
+    //mise à jour des différente map de circuit (dépot, charges, ...)
+    void maj_Depots();
 
     // retourne le coût mélangeant déséquilibre et distance totale (mesure
     // permettant la comparaison simple de deux solutions)

@@ -14,10 +14,12 @@ Circuit::Circuit(Instance* inst, Remorque* remorque) {
     this->depots = new map<Station*,int>();
     this->charges = new map<Station*,int>();
 
-    charges_init_max = new map<Station*, int>();
-    charges_init_min = new map<Station*, int>();
-    charges_courante_max = new map<Station*, int>();
-    charges_courante_min = new map<Station*, int>();
+
+    this->charges_init_max = new map<Station*, int>();
+    this->charges_init_min = new map<Station*, int>();
+    this->charges_courante_max = new map<Station*, int>();
+    this->charges_courante_min = new map<Station*, int>();
+    this->desequilibre_courant = new map<Station*,int>();
 
     // this->depots = new vector<int>();
     // this->charges = new vector<int>();
@@ -227,40 +229,54 @@ void Circuit::equilibrate() {
 
 
     }
+    this->maj_Depots();
+    logn6("Circuit::equilibrate END");
+}
+
+
+void Circuit::maj_Depots(){
     auto charge_courante = this->charge_init;
+    logn5("Circuit::maj_depot START");
     for (auto it = this->stations->begin(); it != this->stations->end(); ++it) {
     	Station* station = *it;
+    	logn5("Circuit::maj_depot de la station : " + U::to_s(*station));
     	if(station->deficit() > 0){
     		if (charge_courante >= station->deficit()){
+    			(*this->desequilibre_courant)[station] = 0;
     			(*this->depots)[station] = station->deficit();
 
     		}
     		else{
     			(*this->depots)[station] = charge_courante;
+    			(*this->desequilibre_courant)[station] = charge_courante-station->deficit();
     			this->desequilibre += abs(charge_courante-station->deficit());
     		}
     	}
     	else{
-    		if (remorque->capa - charge_courante >= -station->deficit()){
-    		    	(*this->depots)[station] = station->deficit();
+    		if (this->remorque->capa - charge_courante >= -station->deficit()){
+    			(*this->desequilibre_courant)[station] = 0;
+    				(*this->depots)[station] = station->deficit();
     		    }
     		else{
-    		    	(*this->depots)[station] = -(remorque->capa - charge_courante);
-    		    	this->desequilibre += abs(-station->deficit()-(remorque->capa - charge_courante));
+
+    		    	(*this->depots)[station] = -(this->remorque->capa - charge_courante);
+    		    	(*this->desequilibre_courant)[station] = -station->deficit()-(this->remorque->capa - charge_courante);
+    		    	this->desequilibre += abs(-station->deficit()-(this->remorque->capa - charge_courante));
     		    }
     	}
+
     	(*this->charges)[station] = charge_courante - (*this->depots)[station];
     	charge_courante = (*this->charges)[station];
-    	if(charge_courante > remorque->capa )
+    	if(charge_courante > this->remorque->capa )
     		U::die("circuit::equilibrate charge_courante>capa deficit : " + U::to_s(station->deficit()) + " charge_courante : " + U::to_s(charge_courante) + " capa : " + U::to_s(station->capa));
 
     	// incrémentation du desequilibre du circuit
-        logn7("Circuit::equilibrate: avant maj desequilibre");
+        logn7("Circuit::majDepot end");
 
 
     }
-    logn6("Circuit::equilibrate END");
 }
+
 
 // Insertion d'une station dans un circuit.
 // si pos est absent : on ajoute à la fin de la liste des stations
@@ -288,6 +304,7 @@ list<Station*>::iterator Circuit::insert(Station* station, int pos) {
 // d'équilibrage est faite), mais pas nécessairement efficace !
 //
 list<Station*>::iterator Circuit::insert_best(Station* station) {
+	logn5("Circuit::insert_best insert_best BEGIN");
 
 	list<Station*>::iterator  it_insert;
 	/** ensemble d'heuristique evitant la boucle dans certain cas **/
@@ -402,6 +419,7 @@ list<Station*>::iterator Circuit::insert_best(Station* station) {
 			it_insert = this->stations->insert(best_it, station);
 		}
 	}
+	logn6("Circuit::insert_best circuit avant update finale");
     this->update();
     logn6("Circuit::insert_best circuit APRES insertion\n" + this->to_s_long());
     logn5("Circuit::insert_best END");
@@ -446,9 +464,11 @@ string Circuit::to_s_long() {
         Arc* arc = inst->get_arc(src, dst);
         int depot = this->depots->at((Station*)arc->dst);
         int charge = this->charges->at((Station*)arc->dst);
+        int desequilibre_courant = this->desequilibre_courant->at((Station*)arc->dst);
         buf << "   " <<  arc->to_s_long()
             << " depot de "  << depot
-            << " => charge = " << charge << endl;
+            << " => charge = " << charge
+            << " , déséquilibre courant : " << desequilibre_courant << endl;
         src = dst;
     }
     if (stations->size() != 0) {

@@ -44,7 +44,7 @@ bool GreedySolver::solve() {
     // parcours des stations de l'instance
     for(auto it = inst->stations->begin(); it != inst->stations->end(); ++it){
     	Station* station = *it;
-    	logn2("ajout de la station : "+U::to_s(*station));
+    	logn2("GreedySolver::solve ajout de la station : "+U::to_s(*station));
 
     	auto deficit_min = 1000000;
     	auto length_min = 1000000;
