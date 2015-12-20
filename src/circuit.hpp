@@ -124,9 +124,22 @@ public:
     // circuit.
     void equilibrate();
 
+    //equilibrage partiel : pour un circuit déjà équilibré auquel on a ajouté une station, on cherche a mettre à jour la charge init
+    // et à determiner ou commence la second part (voir my_insert pour definission de la seconde part)
+    int Partial_equilibrate(Station* s, list<Station*>::iterator insert_it, list<Station*>::iterator& it_second_part,
+    		bool& SecondPartExiste, bool& stationAddedAsFirstOF2Part, int& deficit_from_partial_update, int& desequilibre_before_SecondPart);
+
     list<Station*>::iterator insert(Station* s, int pos=0);
     list<Station*>::iterator insert_best(Station* s);
+    list<Station*>::iterator my_insert(Station* s);
 
+    int my_insertCost(Station* s, int& Best_iterateur);
+
+
+    int my_insertSecondPart(Station* s, const list<Station*>::iterator& it2insert);
+    int my_insertFirstPart(Station* s, const list<Station*>::iterator& it2insert);
+
+    bool is_first_part(const list<Station*>::iterator& it);//determine si l'itérateur se trouve dans la partie qui determine lacharge init (first part) ou non
     //retire du circuit la station concerné
     void erase_station(const Station& station, list<Station*>::iterator  it);
 

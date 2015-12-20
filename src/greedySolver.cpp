@@ -11,6 +11,7 @@ GreedySolver::GreedySolver(Instance* inst) : Solver::Solver(inst) {
     cerr << "\nGreedySolver non implémenté : AU BOULOT !" << endl;
     logn1(name + ": " + desc + " inst: " + inst->name);
 
+
 }
 GreedySolver::~GreedySolver()  {
     // TODO
@@ -18,7 +19,8 @@ GreedySolver::~GreedySolver()  {
 // Méthode principale de ce solver, principe :
 //
 bool GreedySolver::solve() {
-
+/* TODO : il n'est pas nécéssaire d'iserer lles station dans les circuit, juste de récupérer
+ * les coûts engendré */
     found = false;
 
 
@@ -56,7 +58,9 @@ bool GreedySolver::solve() {
     	// On parcours les différentes remorques à laquelle on pourrait atribuer la station
     	for(auto remorque_id = 0; remorque_id < inst->remorques->size(); remorque_id++)
     	{
+    		logn7("greedy::solve Before attribution Circuit");
     		Circuit* circuit = tmp_sol->circuits->at(remorque_id);
+    		logn7("greedy::solve attribution de la station " + U::to_s(*station) + " à la remorque " + U::to_s(*(circuit->remorque)));
     		// On ajoute la station dans un circuit temporaire
     		list<Station*>::iterator  it_insert;
     		if (sinserter == "FRONT") {
@@ -65,7 +69,10 @@ bool GreedySolver::solve() {
     			it_insert = circuit->insert(station, -1);
     		} else if (sinserter == "BEST") {
     			it_insert = circuit->insert_best(station);
-    		} else {
+    		} else if (sinserter == "MYINSERT") {
+    			it_insert = circuit->my_insert(station);
+    		}
+    		else {
     			U::die("station_inserter inconnu : " + U::to_s(sinserter));
     		}
 
@@ -143,6 +150,9 @@ bool GreedySolver::solve() {
 		} else if (sinserter == "BEST") {
 			best_circuit->insert_best(station);
 			tmp_circuit->insert_best(station);
+		} else if (sinserter == "MYINSERT") {
+			best_circuit->my_insert(station);
+			tmp_circuit->my_insert(station);
 		} else {
 			U::die("station_inserter inconnu : " + U::to_s(sinserter));
 		}
@@ -155,7 +165,7 @@ bool GreedySolver::solve() {
 
     }
 
-
+    logn5("Circuit::greedy fin solve, before update");
     this->solution->update();
     this->found = true;
     return found;

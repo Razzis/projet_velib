@@ -146,7 +146,8 @@ class Options  {
         // Validation des types énumérés, ...
         if ( !(this->station_inserter=="FRONT" ||
                this->station_inserter=="BACK" ||
-               this->station_inserter=="BEST" )) {
+               this->station_inserter=="BEST" ||
+               this->station_inserter=="MYINSERT")) {
             cerr << "Erreur valeur de station_inserter incorrecte : "
                  << this->station_inserter << endl;
             cerr << parser->get("--station-inserter")->get_help();
@@ -269,12 +270,15 @@ class Options  {
               ->add_alias("-N");
 
         //--------------
-        parser->add_doc("\nOptions liées au solveur glouton\n");
+
 
         this->station_inserter = "BEST";
         parser->add_string_option("--station-inserter", this->station_inserter)
-              ->set_desc("Mode d'insertion dans un gloution (FRONT|BACK|BEST)")
+              ->set_desc("Mode d'insertion dans un glouton (FRONT|BACK|BEST|MYINSERT)")
               ->add_alias("--sinserter");
+
+
+
 
         this->station_chooser = "RAND";
         parser->add_string_option("--instance-chooser", this->station_chooser)
