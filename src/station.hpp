@@ -20,6 +20,9 @@ public:
 
     Station(Instance* inst, string name, int x, int y,
                   int capa, int ideal, int nbvp);
+
+
+
     virtual ~Station();
     virtual string classname();
 
@@ -30,4 +33,5 @@ public:
     virtual string to_s_long();
 
 };
+bool operator<(Station const& s1, Station const& s2);
 #endif

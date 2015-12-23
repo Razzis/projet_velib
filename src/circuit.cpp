@@ -11,6 +11,12 @@ Circuit::Circuit(Instance* inst, Remorque* remorque) {
     this->desequilibre = 0;
     this->length = 0;
 
+    this->desequilibre_max = 0;
+    this->desequilibre_min = 0;
+
+    this->iterateur2desequilibreMax = 0;
+    this->iterateur2desequilibreMin = 0;
+
     this->depots = new map<Station*,int>();
     this->charges = new map<Station*,int>();
 
@@ -431,7 +437,7 @@ void Circuit::maj_Depots(){
     auto charge_courante = this->charge_init;
     this->desequilibre = 0;
     logn2("Circuit::maj_depot START");
-
+    int iterateur = 1;
     for (auto it = this->stations->begin(); it != this->stations->end(); ++it) {
     	Station* station = *it;
     	logn2("Circuit::maj_depot charge_courante : " + U::to_s(charge_courante));
@@ -487,6 +493,17 @@ void Circuit::maj_Depots(){
 			(*this->charges_courante_min)[station] = charge_courante;
     	}
 
+    	if((*this->desequilibre_courant)[station] > this->desequilibre_max){
+    		this->desequilibre_max = (*this->desequilibre_courant)[station];
+    		this->iterateur2desequilibreMax = iterateur;
+    	}
+    	if((*this->desequilibre_courant)[station] < this->desequilibre_min){
+    		this->desequilibre_min = (*this->desequilibre_courant)[station];
+    		this->iterateur2desequilibreMin = iterateur;
+    	}
+    	iterateur++;
+
+
     	if(charge_courante > this->remorque->capa )
     		U::die("circuit::equilibrate charge_courante>capa deficit : " + U::to_s(station->deficit()) + " charge_courante : " + U::to_s(charge_courante) + " capa : " + U::to_s(station->capa));
 
@@ -518,6 +535,32 @@ list<Station*>::iterator Circuit::insert(Station* station, int pos) {
     }
     logn5("Circuit::insert END");
     return it_insert;
+}
+
+int Circuit::insertCost(Station* station, int pos) {
+	list<Station*>::iterator  it_insert;
+	int Best_Cost;
+    logn5("Circuit::insert BEGIN " + station->name + " pos=" + U::to_s(pos));
+    if (pos == -1) {
+        it_insert = this->stations->insert(this->stations->end(), station);
+        this->update();
+        Best_Cost = this->get_cost();
+        this->stations->erase(it_insert);
+        this->update();
+    } else {
+        // on avance l'itérateur jusqu'à la position pos
+        auto it = this->stations->begin();
+        for (int i = 0; i < pos; ++i) {
+            it++;
+        }
+        it_insert = this->stations->insert(it, station);
+        this->update();
+        Best_Cost = this->get_cost();
+        this->stations->erase(it_insert);
+        this->update();
+    }
+    logn5("Circuit::insert END");
+    return Best_Cost;
 }
 
 // Cette brique d'insertion est opérationnelle (mais suppose que la brique
@@ -656,6 +699,165 @@ list<Station*>::iterator Circuit::insert_best(Station* station) {
 
 
 }
+
+
+
+
+int Circuit::insert_bestCost(Station* station) {
+	logn5("Circuit::insert_best insert_best BEGIN");
+	int Best_Cost;
+	list<Station*>::iterator  it_insert;
+	/** ensemble d'heuristique evitant la boucle dans certain cas **/
+	bool utilisation_heuristique = false;
+	/* si le desequilibre est nul et qu'a la fin du circuit il reste dans la
+	 * remorque assez de vélo pour annuler le déficit de la station, on peut la
+	 * mettre en back */
+
+
+	/* si le desequilibre est nul et que on peut jouer (à la hausse  ou à la baisse)
+	 * sur la charge initial de la remorque de manière à annuler entièrement le
+	 * déficit de la station, on insert en FRONT */
+
+
+	if(station->deficit() >= 0){
+		if((*this->charges)[*this->stations->end()] >= station->deficit() && this->desequilibre == 0){
+			it_insert = this->insert(station,-1);
+	        this->update();
+	        Best_Cost = this->get_cost();
+	        this->stations->erase(it_insert);
+			utilisation_heuristique = true;
+		}
+		else if(this->charge_init_max >= station->deficit()
+						&& this->desequilibre == 0){
+					it_insert = this->insert(station,0);
+			        this->update();
+			        Best_Cost = this->get_cost();
+			        this->stations->erase(it_insert);
+					utilisation_heuristique = true;
+		}
+	}
+	else{
+		if(this->remorque->capa - (*this->charges)[*this->stations->end()] >= -station->deficit() && this->desequilibre == 0){
+			it_insert = this->insert(station,-1);
+	        this->update();
+	        Best_Cost = this->get_cost();
+	        this->stations->erase(it_insert);
+			utilisation_heuristique = true;
+		}
+		else if(this->remorque->capa - this->charge_init_min >= -station->deficit()
+						&& this->desequilibre == 0){
+					it_insert = this->insert(station,0);
+			        this->update();
+			        Best_Cost = this->get_cost();
+			        this->stations->erase(it_insert);
+					utilisation_heuristique = true;
+				}
+
+	}
+
+
+
+
+/*	if( this->desequilibre == 0 && !utilisation_heuristique){
+
+		cout << *this;
+
+		cout << "------------------------------------" << endl;
+		cout << "station " << *station << " à ajouter deficit : " << station->deficit() << endl;
+		cout << "------------------------------------" << endl;
+		U::die("###############################################");
+	}*/
+
+
+
+
+
+	/****************************************************************/
+	if(utilisation_heuristique == false){
+		Log::level += 0; // on peut modifier le level juste pour cette méthode...
+		logn5("Circuit::insert_best BEGIN " + this->remorque->name +
+			  " insertion de " + station->name);
+		// U::die("Circuit::insert_best : non implémentée");
+		float best_cost = 999999999999;
+		list<Station*>::iterator best_it;
+		int best_pos = 0;
+		int pos = 0;
+
+		if (this->stations->size() == 0) {
+			// circuit vide : il suffit d'insérer la nouvelle station à la fin
+			logn6("Circuit::insert_best station VIDE => push_back simple !");
+			it_insert = this->stations->insert(this->stations->end(), station);
+	        this->update();
+	        Best_Cost = this->get_cost();
+	        this->stations->erase(it_insert);
+		} else {
+			for (auto it = this->stations->begin();
+					  it != this->stations->end(); ++it) {
+				Station* s = *it; // La station devant laquelle on va insérer "station"
+				logn7("Circuit::insert_best de " + station->name +
+						" avant " +  s->name);
+				auto it2 = this->stations->insert(it, station);
+				// On doit mettre à jour ce circuit avant d'en extraire le coût !
+				this->update();
+				int cost = this->get_cost();
+				logn7("  Circuit::insert_best : "
+					  " this_pos=" + U::to_s(pos) +
+					  ", this_cost=" + U::to_s(cost) +
+					  " (best_cost=" + U::to_s(best_cost) + ")");
+				if (cost < best_cost) {
+					best_cost = cost;
+					best_pos = pos;
+					best_it = it;
+					logn6("Circuit::insert_best : MEILLEURE POSITION POUR L'INSTANT "
+						  " avant name=" + s->name +
+						  " : best_pos=" + U::to_s(pos) +
+						  " => best_cost=" + U::to_s(cost));
+				} else {
+					// logn7("Circuit::insert_best : pas de record"
+					//       " avant name=" + s->name +
+					//       " this_pos=" + U::to_s(pos) +
+					//       ", this_cost=" + U::to_s(cost) +
+					//       " (best_cost=" + U::to_s(best_cost)) + ")";
+				}
+				// On remet le circuit en état avant de passer à station suivante
+				this->stations->erase(it2);
+				// A LA FIN
+				pos++;
+			}
+
+
+
+
+
+
+
+			// On procède effectivement à la meilleure insertion
+			logn6("Circuit::insert_best : "
+				  "best_pos=" + U::to_s(best_pos) +
+				  " avant name=" + (*best_it)->name +
+				  " => get_cost=" + U::to_s(best_cost));
+
+				it_insert = this->stations->insert(best_it, station);
+		        this->update();
+		        Best_Cost = this->get_cost();
+		        this->stations->erase(it_insert);
+
+		}
+	}
+	logn6("Circuit::insert_best circuit avant update finale");
+    this->update();
+    logn6("Circuit::insert_best circuit APRES insertion\n" + this->to_s_long());
+    logn5("Circuit::insert_best END");
+    Log::level -= 0; // ...on doit restaurer la modification du level
+
+    return Best_Cost;
+
+
+}
+
+
+
+
 list<Station*>::iterator Circuit::my_insert(Station* s){
 	int Best_iterateur;
 	this->my_insertCost(s, Best_iterateur);
@@ -673,19 +875,19 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 	bool FirstPart = true;
 	int iterateur = 1;
 	list<Station*>::iterator it2;
-	//TODO manque la position 0;
+
 
 
 
 	it2 = this->insert(s,0);
 	this->update();
-	BestCost = this->desequilibre;
+	BestCost = this->get_cost();
 	Best_iterateur = 0;
 	Cost = BestCost;
 	this->stations->erase(it2);
 	this->update();
 
-	if(this->stations->size() != 0){
+	if(this->stations->size() > 0){
 		for(auto it = this->stations->begin(); it != this->stations->end(); ++it){
 
 			if(iterateur == this->stations->size())
@@ -697,9 +899,7 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 
 			if(FirstPart){
 
-				cout << "BREAL" << endl;
-				cout << *this << endl;
-				cout << "BREAL" << endl;
+
 
 				Cost = this->my_insertFirstPart(s, it);
 
@@ -725,9 +925,8 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 					cout << "realCOst : " << (realCost - realCost%1000000) << "(" << realCost << ")" << endl;
 					cout << "Cost : " << Cost << endl;
 					U::die("Cost différents2");
-				}
-				cout << "##########Cost : " << Cost << endl;
-				cout << "##########Station : " << *station << endl;*/
+				}*/
+
 
 			}
 			else{
@@ -738,10 +937,12 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 
 
 
+
 			}
 			if(Cost < BestCost){
 				BestCost = Cost;
 				Best_iterateur = iterateur;
+
 			}
 			iterateur++;
 
@@ -755,7 +956,7 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 
 
 
-	return Cost;//attention a savoir si quand  on insert, on insert avant ou apres  it2
+	return BestCost;//attention a savoir si quand  on insert, on insert avant ou apres  it2
 
 }
 int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2insert){
@@ -800,8 +1001,7 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 
 		auto it2 = it_start;
 		while(it2 != this->stations->end() || stationAddedAsFirstOf2Part){//on va mettre a jour les deficit engendré par les autres stations
-			int charge_courante_min;
-			int charge_courante_max;
+
 			int charge_courante;
 			int desequilibre_courant;
 
@@ -814,24 +1014,16 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 					Station* Old_Station = *Prev_iterator;
 					Station2Start = *Prev_iterator;
 					desequilibre_courant = 0;
-					charge_courante_min = (*this->charges_courante_min)[Old_Station] + charge_init_new - (*this->charges_init_min)[Old_Station];// - s->deficit();
-					charge_courante_max = (*this->charges_courante_max)[Old_Station] + charge_init_new - (*this->charges_init_max)[Old_Station];// - s->deficit();
 					charge_courante = (*this->charges_courante_min)[Old_Station] + charge_init_new - (*this->charges_init_min)[Old_Station];
 
-					logn2("Circuit::InsertFirstPart stationAddedAsFirstOf2Part==true s->deficit : "+U::to_s(s->deficit()));
-					logn2("Circuit::InsertFirstPart stationAddedAsFirstOf2Part==true (charge_courante_min,charge_courante_max) : ("+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
 
 				}
 				else{
 					if(s->deficit() > 0){
 						charge_courante = 0;
-						charge_courante_min = 0;
-						charge_courante_max = 0;
 						desequilibre_courant = s->deficit()-charge_init_new;
 					}
 					else{
-						charge_courante_min = this->remorque->capa;
-						charge_courante_max = this->remorque->capa;
 						charge_courante = this->remorque->capa;
 						desequilibre_courant = -(-s->deficit()- (this->remorque->capa-charge_init_new) );
 					}
@@ -839,8 +1031,6 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 
 			}
 			else{//la derniere station ne devrais aps etre modifiée
-				charge_courante_min = (*this->charges_courante_min)[station] + charge_init_new - (*this->charges_init_min)[station];// - s->deficit();
-				charge_courante_max = (*this->charges_courante_max)[station] + charge_init_new - (*this->charges_init_max)[station];// - s->deficit();
 				charge_courante = (*this->charges_courante_min)[station] + charge_init_new - (*this->charges_init_min)[station];// - s->deficit();
 
 				desequilibre_courant = (*this->desequilibre_courant)[station];
@@ -851,22 +1041,16 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 			logn5("Circuit::my_insert deficit a absorber : "+U::to_s(deficit_a_absorber));
 			logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
 			logn5("Circuit::my_insert desequilibre_courant : "+U::to_s(desequilibre_courant));
-			logn5("Circuit::my_insert charge_courante_min : "+U::to_s(charge_courante_min));
-			logn5("Circuit::my_insert charge_courante_max : "+U::to_s(charge_courante_max));
 			if(deficit_a_absorber == 0){
 				if(desequilibre_courant == 0){
 					if(charge_courante < 0){
 
 						desequilibre_circuit += -charge_courante;
 						desequilibre_courant += -charge_courante;
-						charge_courante_min = 0;
-						charge_courante_max = 0;
 						charge_courante = 0;
 
 						logn5("Circuit::my_insert deficit a absorber : "+U::to_s(deficit_a_absorber));
 						logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
-						logn5("Circuit::my_insert charge_courante_min : "+U::to_s(charge_courante_min));
-						logn5("Circuit::my_insert charge_courante_max : "+U::to_s(charge_courante_max));
 
 					}
 
@@ -874,15 +1058,12 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 
 						desequilibre_circuit += charge_courante - this->remorque->capa;
 						desequilibre_courant -= charge_courante - this->remorque->capa;
-						charge_courante_min = this->remorque->capa;
-						charge_courante_max = this->remorque->capa;
 						charge_courante = this->remorque->capa;
 
 
 
 						logn5("Circuit::my_insert deficit a absorber : "+U::to_s(deficit_a_absorber));
 						logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
-						logn5("Circuit::my_insert charge_courante_min : "+U::to_s(charge_courante_min));
 						logn5("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
 					}
 				}
@@ -890,22 +1071,16 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 					if(charge_courante < 0){
 						desequilibre_circuit += -(charge_courante);
 						desequilibre_courant += -charge_courante;
-						charge_courante_min = 0;
-						charge_courante_max = 0;
 						charge_courante = 0;
 					}
 					else if(charge_courante - desequilibre_courant < 0){// Mais on en a pas assez au min
 						desequilibre_circuit -= abs( -(charge_courante) );
 						desequilibre_courant -= abs( charge_courante);
-						charge_courante_min = 0;
-						charge_courante_max = 0;
 						charge_courante = 0;
 					}
 					else{// on a assez de velo, ou même plus qu'il n'en faut
 						desequilibre_circuit -= abs(desequilibre_courant);
 						desequilibre_courant = 0;
-						charge_courante_min -= desequilibre_courant;
-						charge_courante_max -= desequilibre_courant;
 						charge_courante -= desequilibre_courant;
 					}
 					logn5("Circuit::my_insert deficit a absorber : "+U::to_s(deficit_a_absorber));
@@ -917,30 +1092,24 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 						desequilibre_circuit += abs(charge_courante - this->remorque->capa);
 						desequilibre_courant += abs(charge_courante - this->remorque->capa);
 						charge_courante = this->remorque->capa;
-						charge_courante_min = this->remorque->capa;
-						charge_courante_max = this->remorque->capa;
 
 					}
 					else if(charge_courante - desequilibre_courant > this->remorque->capa){
 
 						desequilibre_circuit -= abs(charge_courante - this->remorque->capa);
 						desequilibre_courant -= -abs(charge_courante - this->remorque->capa);
-						charge_courante_min = this->remorque->capa;
-						charge_courante_max = this->remorque->capa;
 						charge_courante = this->remorque->capa;
 
 
 					}
 					else if(charge_courante - desequilibre_courant < this->remorque->capa){
 						desequilibre_circuit -= abs(desequilibre_courant);
-						charge_courante_min += -desequilibre_courant;
-						charge_courante_max += -desequilibre_courant;
 						charge_courante += -desequilibre_courant;
 						desequilibre_courant = 0;
 					}
 					logn5("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
 					logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
-					logn5("Circuit::my_insert charge_courante_min : "+U::to_s(charge_courante));
+					logn5("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
 				}
 			}
 			if(deficit_a_absorber < 0){
@@ -973,7 +1142,7 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 						logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
-						desequilibre_circuit -= -desequilibre_courant;//todo voir insert 12
+						desequilibre_circuit -= -desequilibre_courant;
 						deficit_a_absorber -= desequilibre_courant;
 						desequilibre_courant = 0;
 						logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
@@ -989,8 +1158,7 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 						desequilibre_circuit += deficit_a_absorber-(this->remorque->capa - charge_courante);//attention charge max
 						desequilibre_courant += -(deficit_a_absorber-(this->remorque->capa - charge_courante));
 						deficit_a_absorber -= deficit_a_absorber-(this->remorque->capa - charge_courante);
-						//charge_courante_min = this->remorque->capa;
-						//charge_courante_max = this->remorque->capa;
+
 
 
 
@@ -1048,8 +1216,6 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 				desequilibre_courant += -(charge_courante - this->remorque->capa);
 				deficit_a_absorber -= (charge_courante - this->remorque->capa);
 				desequilibre_circuit += abs( -(charge_courante - this->remorque->capa) );
-				charge_courante_min = this->remorque->capa;
-				charge_courante_max = this->remorque->capa;
 				charge_courante = this->remorque->capa;
 			}
 			if(charge_courante < 0){//je crois que dans ce cas min==max
@@ -1057,8 +1223,6 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 				desequilibre_courant += -(charge_courante);
 				desequilibre_circuit += -(charge_courante);
 				deficit_a_absorber -= charge_courante;//deficit_a_absorber <0
-				charge_courante_max = 0;
-				charge_courante_min = 0;
 				charge_courante = 0;
 			}
 
@@ -1086,13 +1250,13 @@ int Circuit::my_insertFirstPart(Station* s, const list<Station*>::iterator& it2i
 
 
 
-		auto cost = desequilibre_circuit;
+		auto cost = compute_cost(s, desequilibre_circuit, it2insert);
 		return cost;
 
 
 	}
 	else{
-		return 0;
+		return compute_cost(s, 0, it2insert);
 	}
 
 	/*this->stations->erase(it2);
@@ -1215,7 +1379,7 @@ int Circuit::my_insertSecondPart(Station* s, const list<Station*>::iterator& it2
 
 		}
 		//desequilibre_circuit += deficit_a_absorber;
-		cout << "deficit a absorber : " << deficit_a_absorber << endl;
+
 		if(deficit_a_absorber == 0)
 				break;
 	}
@@ -1223,9 +1387,30 @@ int Circuit::my_insertSecondPart(Station* s, const list<Station*>::iterator& it2
 
 
 
-	auto cost = desequilibre_circuit;
+	auto cost = compute_cost(s, desequilibre_circuit, it2insert);
 	return cost;
 }
+int Circuit::compute_cost(Station* s, int desequilibre, const list<Station*>::iterator& it2insert){
+	list<Station*>::iterator it = it2insert;
+	Site* s0 = *it2insert;
+	Site* s1 = s;
+	Site* Remorque = this->remorque;
+	if(it != this->stations->end()){
+		++it;
+		if(it != this->stations->end()){
+			Site* s2 = *(it);
+			//U::die("dist : ("+U::to_s(*s0) + "," +U::to_s(*s2) + "), "+U::to_s(inst->get_dist(s0,s2)));
+			return 1000000*desequilibre + this->length + inst->get_dist(s0,s1) + inst->get_dist(s1,s2) - inst->get_dist(s0,s2);
+		}
+	}
+
+	//return desequilibre;
+	return 1000000*desequilibre + this->length + inst->get_dist(s0,s1) - inst->get_dist(s0,Remorque) + inst->get_dist(s1,Remorque);
+
+
+
+}
+
 bool Circuit::is_first_part(const list<Station*>::iterator& it){
 	Station* station = *it;
 	if((*this->charges_init_min)[station] == (*this->charges_init_max)[station])

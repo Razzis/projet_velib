@@ -38,6 +38,13 @@ public:
     int charge_init_min;
     int charge_init_max;
 
+    //numeros de la stations de déficit relatif max et min
+    int desequilibre_max;
+    int desequilibre_min;
+
+    int iterateur2desequilibreMax;
+    int iterateur2desequilibreMin;
+
     map<Station*, int>* charges_init_max;
     map<Station*, int>* charges_init_min;
     map<Station*, int>* charges_courante_max;
@@ -131,6 +138,10 @@ public:
 
     list<Station*>::iterator insert(Station* s, int pos=0);
     list<Station*>::iterator insert_best(Station* s);
+
+    int insertCost(Station* s, int pos=0);
+    int insert_bestCost(Station* s);
+
     list<Station*>::iterator my_insert(Station* s);
 
     int my_insertCost(Station* s, int& Best_iterateur);
@@ -140,6 +151,7 @@ public:
     int my_insertFirstPart(Station* s, const list<Station*>::iterator& it2insert);
 
     bool is_first_part(const list<Station*>::iterator& it);//determine si l'itérateur se trouve dans la partie qui determine lacharge init (first part) ou non
+    int compute_cost(Station* s, int desequilibre, const list<Station*>::iterator& it2insert);
     //retire du circuit la station concerné
     void erase_station(const Station& station, list<Station*>::iterator  it);
 

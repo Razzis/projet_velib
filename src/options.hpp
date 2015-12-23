@@ -22,6 +22,8 @@ class Options  {
     string station_chooser;
     string remorque_chooser;
 
+    string Test_file;
+
     // long seed;
     int seed;
     bool force;
@@ -147,21 +149,24 @@ class Options  {
         if ( !(this->station_inserter=="FRONT" ||
                this->station_inserter=="BACK" ||
                this->station_inserter=="BEST" ||
-               this->station_inserter=="MYINSERT")) {
+               this->station_inserter=="MYINSERT" ||
+               this->station_inserter=="HEURISTIQUE")) {
             cerr << "Erreur valeur de station_inserter incorrecte : "
                  << this->station_inserter << endl;
             cerr << parser->get("--station-inserter")->get_help();
             exit(1);
         }
         if ( !(this->station_chooser=="INST" ||
-               this->station_chooser=="RAND" )) {
+               this->station_chooser=="RAND" ||
+               this->station_chooser=="SORTED" ||
+               this->station_chooser=="RSORTED")) {
             cerr << "Erreur valeur de station_chooser incorrecte : "
                  << this->station_chooser << endl;
             cerr << parser->get("--station-chooser")->get_help();
             exit(1);
         }
         if ( !(this->remorque_chooser=="ALT" ||
-               this->remorque_chooser=="RAND" )) {
+               this->remorque_chooser=="RAND")) {
             cerr << "Erreur valeur de remorque_chooser incorrecte : "
                  << this->remorque_chooser << endl;
             cerr << parser->get("--remorque-chooser")->get_help();
@@ -287,7 +292,7 @@ class Options  {
 
         this->remorque_chooser = "RAND";
         parser->add_string_option("--remorque-chooser", this->remorque_chooser)
-              ->set_desc("Mode de choix de la remorque (ALT|RAND)")
+              ->set_desc("Mode de choix de la remorque (ALT|RAND|MYCHOICE)")
               ->add_alias("--rchooser");
 
         //--------------
@@ -299,6 +304,14 @@ class Options  {
         //       ->set_desc("Génère une instance aléatoire.")
         //       ->add_abbrev("-g", 1);
         // /// parser->add_abbrev_option("-G", "--generate-val", "1");
+
+        //option pour les Tests
+        this->Test_file = "false";
+        parser->add_string_option("--tests", this->Test_file)
+                      ->set_desc("realisation des tests");
+
+
+
 
 
         //--------------

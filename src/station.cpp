@@ -44,6 +44,10 @@ int Station::margin() {
 int Station::deficit() {
     return this->ideal - this->nbvp;
 }
-
-
+bool operator<(Station const& s1, Station const& s2){
+	if((s1.ideal - s1.nbvp) < (s2.ideal - s2.nbvp))
+		return true;
+	else
+		return false;
+}
 //./
