@@ -23,6 +23,10 @@ int main(int argc, char *argv[]) {
     cout << "args->seed=" << args->seed << endl;
     cout << "args->filename=" << args->filename << endl;
     cout << "args->outfilename=" << args->outfilename << endl;
+
+
+
+
     // exit(0);
 
     if (args->solver == 0) {
@@ -45,6 +49,44 @@ int main(int argc, char *argv[]) {
     // Démarrage d'un chronomètre
     time_t start_time;
     time(&start_time);
+
+
+    if(args->Test_file != "false"){
+    	for(int i = 0; i<6; i++){
+    		args->filename = "../data/v"+U::to_s(i) + ".dat";
+    		cout << "FILENAME : " << args->filename << endl;
+    		inst = new Instance("../data/v"+U::to_s(i) + ".dat", args);
+			logn1("Test : glouton (StupidSolver)");
+		    // Exemple d'affichage de quelques options
+		    cout << "args->solver=" << args->solver << endl;
+		    cout << "args->seed=" << args->seed << endl;
+		    cout << "args->filename=" << args->filename << endl;
+		    cout << "args->outfilename=" << args->outfilename << endl;
+			StupidSolver* solver = new StupidSolver(inst);
+			solver->solve();
+			if (solver->found) {
+				cout << "Solver : solution trouvée de coût "
+					 << solver->solution->get_cost() << endl;
+				// cout << "Solver 2 : solution trouvée de coût "<< endl;
+				Solution* sol = solver->get_solution();
+				Solution::main_print_solution(sol, args);
+				cout << "solution trouvée de coût "
+					 << solver->solution->get_cost_string()
+					 << " (soit " << solver->solution->get_cost() << ")"
+					 << endl;
+			} else {
+				cout << "StupidSolver : pas de solution" << endl;
+			}
+			delete solver;
+			logn1("Solver 2 : fin de StupidSolver");
+    	}
+
+    	exit(1);
+    }
+
+
+
+
 
     // Dans la suite, le comportement de la résolution dépend du choix du
     // solveur passé en paramètre.

@@ -20,11 +20,19 @@ void Instance::init() {
 }
 
 Instance::Instance() {
+	arcs = new vector<Arc*>();
+	stations = new vector<Station*>();
+	remorques = new vector<Remorque*>();
+	sites = new vector<Site*>();
     this->init();
 }
 
 /// Instance::Instance(string filename, Args* args) {
 Instance::Instance(string filename, Options* args) {
+	arcs = new vector<Arc*>();
+	stations = new vector<Station*>();
+	remorques = new vector<Remorque*>();
+	sites = new vector<Site*>();
     this->init();
     this->filename = filename;
     this->args = args;

@@ -117,6 +117,8 @@ Solution* CarloSolver::apply_one_greedy(Solution* sol) {
             circuit->insert(station, -1);
         } else if (sinserter == "BEST") {
             circuit->insert_best(station);
+        } else if (sinserter == "MYINSERT") {
+            circuit->my_insert(station);
         } else {
             U::die("station_inserter inconnu : " + U::to_s(sinserter));
         }

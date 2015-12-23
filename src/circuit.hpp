@@ -38,10 +38,18 @@ public:
     int charge_init_min;
     int charge_init_max;
 
+    //numeros de la stations de déficit relatif max et min
+    int desequilibre_max;
+    int desequilibre_min;
+
+    int iterateur2desequilibreMax;
+    int iterateur2desequilibreMin;
+
     map<Station*, int>* charges_init_max;
     map<Station*, int>* charges_init_min;
     map<Station*, int>* charges_courante_max;
     map<Station*, int>* charges_courante_min;
+    map<Station*, int>* desequilibre_courant;
 
     // les stations visitées
     list<Station*>* stations;
@@ -102,6 +110,9 @@ public:
     // Pourrait s'appeler equilibate equilibrate, mais update est plus générique
     void update();
 
+    //mise à jour des différente map de circuit (dépot, charges, ...)
+    void maj_Depots();
+
     // retourne le coût mélangeant déséquilibre et distance totale (mesure
     // permettant la comparaison simple de deux solutions)
     inline int get_cost() {
@@ -120,9 +131,27 @@ public:
     // circuit.
     void equilibrate();
 
+    //equilibrage partiel : pour un circuit déjà équilibré auquel on a ajouté une station, on cherche a mettre à jour la charge init
+    // et à determiner ou commence la second part (voir my_insert pour definission de la seconde part)
+    int Partial_equilibrate(Station* s, list<Station*>::iterator insert_it, list<Station*>::iterator& it_second_part,
+    		bool& SecondPartExiste, bool& stationAddedAsFirstOF2Part, int& deficit_from_partial_update, int& desequilibre_before_SecondPart);
+
     list<Station*>::iterator insert(Station* s, int pos=0);
     list<Station*>::iterator insert_best(Station* s);
 
+    int insertCost(Station* s, int pos=0);
+    int insert_bestCost(Station* s);
+
+    list<Station*>::iterator my_insert(Station* s);
+
+    int my_insertCost(Station* s, int& Best_iterateur);
+
+
+    int my_insertSecondPart(Station* s, const list<Station*>::iterator& it2insert);
+    int my_insertFirstPart(Station* s, const list<Station*>::iterator& it2insert);
+
+    bool is_first_part(const list<Station*>::iterator& it);//determine si l'itérateur se trouve dans la partie qui determine lacharge init (first part) ou non
+    int compute_cost(Station* s, int desequilibre, const list<Station*>::iterator& it2insert);
     //retire du circuit la station concerné
     void erase_station(const Station& station, list<Station*>::iterator  it);
 
