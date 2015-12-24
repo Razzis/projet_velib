@@ -80,12 +80,19 @@ bool GreedySolver::solve() {
     		// On ajoute la station dans un circuit temporaire
     		int insert_iterateur = -2;
     		int Cost_insert;
+    		list<Station*>::iterator it_insert;
     		if (sinserter == "FRONT") {
     			Cost_insert = circuit->insertCost(station);
     		} else if (sinserter == "BACK") {
     			Cost_insert = circuit->insertCost(station, -1);
     		} else if (sinserter == "BEST") {
-    			Cost_insert = circuit->insert_bestCost(station);
+    			//Cost_insert = circuit->insert_bestCost(station);
+
+    			it_insert = circuit->insert_best(station);
+    			Cost_insert = circuit->desequilibre;
+    			circuit->update();
+    			circuit->stations->erase(it_insert);
+    			circuit->update();
     		} else if (sinserter == "MYINSERT") {
     			Cost_insert = circuit->my_insertCost(station, insert_iterateur);
 			} else if (sinserter == "HEURISTIQUE") {

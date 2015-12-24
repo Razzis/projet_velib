@@ -165,5 +165,15 @@
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/util.hpp</locationURI>
 		</link>
+		<link>
+			<name>voisinage.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/voisinage.cpp</locationURI>
+		</link>
+		<link>
+			<name>voisinage.hpp</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/voisinage.hpp</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>

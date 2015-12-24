@@ -87,6 +87,8 @@ public:
     AnnealingSolver(Instance* Instance);
     virtual ~AnnealingSolver();
     virtual bool solve();
+	virtual Solution* apply_one_greedy(Solution* currentsol);
+	virtual Solution* apply_one_recuit(Solution* sol, double T0, double coeff_maj_T0, double nb_explo_voisin, int nb_iteratrion_max);
     Solution* get_solution() {return this->solution;};
 };
 
