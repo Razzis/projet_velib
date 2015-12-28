@@ -113,6 +113,80 @@ void Solution::update() {
     logn4("Solution::update END");
 }
 
+void Solution::Partial_update(Circuit* c1, Circuit* c2, int old_desequilibre_c1, int old_length_c1, int old_desequilibre_c2, int old_length_c2){
+    logn4("Solution::update BEGIN");
+    //on stocke les lengths et desequilibres precedents
+
+
+    // cerr<<"FIN"; exit(1);
+    // Mise à jour de chaque circuit, puis des attributs de la solution
+    // length, desequilibre)
+
+    c1->update();
+    logn5("Solution::update: remorque=" + c1->remorque->name);
+    logn5("  cost=" + U::to_s(c1->desequilibre) + "--"
+                        + U::to_s(c1->length));
+
+
+    this->length += c1->length - old_length_c1;
+    this->desequilibre += c1->desequilibre - old_desequilibre_c1;
+
+    c2->update();
+    logn5("Solution::update: remorque=" + c2->remorque->name);
+    logn5("  cost=" + U::to_s(c2->desequilibre) + "--"
+                        + U::to_s(c2->length));
+
+
+    this->length += c2->length - old_length_c2;
+    this->desequilibre += c2->desequilibre - old_desequilibre_c2;
+
+    logn4("Solution::update: cost=" +
+           U::to_s(this->desequilibre) + "--" +
+           U::to_s(this->length));
+    logn4("Solution::update END");
+    if(this->length < 0 || this->desequilibre < 0){
+    	cout << c1 << endl;
+    	cout << c2 << endl;
+    	cout << "length : " << this->length;
+    	cout << "desequilibre : " << this->desequilibre;
+    	U::die("Solution::Partial_update(c1,c2)");
+
+    }
+}
+
+
+void Solution::Partial_update(Circuit* c1, int old_desequilibre_c1, int old_length_c1){
+    logn4("Solution::update BEGIN");
+    //on stocke les lengths et desequilibres precedents
+
+
+
+
+
+    c1->update();
+    logn5("Solution::update: remorque=" + c1->remorque->name);
+    logn5("  cost=" + U::to_s(c1->desequilibre) + "--"
+                        + U::to_s(c1->length));
+
+
+    this->length += c1->length - old_length_c1;
+    this->desequilibre += c1->desequilibre - old_desequilibre_c1;
+
+    logn4("Solution::update: cost=" +
+           U::to_s(this->desequilibre) + "--" +
+           U::to_s(this->length));
+    logn4("Solution::update END");
+
+    if(this->length < 0 || this->desequilibre < 0){
+    	cout << c1 << endl;
+    	cout << "length : " << this->length;
+    	cout << "desequilibre : " << this->desequilibre;
+    	U::die("Solution::Partial_update(c1)");
+
+    }
+}
+
+
 // Construction d'une chaine correspondant au format standard de la solution
 //
 // Exemple de format de sortie

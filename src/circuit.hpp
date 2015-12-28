@@ -162,7 +162,7 @@ public:
 
 // Décrit le circuit dans la sortie standart (cout)
 std::ostream& operator<<( ostream &flux, Circuit const& circuit );
-
+bool operator<(Circuit const& c1, Circuit const& c2);
 #endif
 //./
 

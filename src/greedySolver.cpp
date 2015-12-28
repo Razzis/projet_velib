@@ -6,6 +6,7 @@
 //#define VERIF_CIRCUIT_NON_VIDE//fait on une recherche pour savoir si les circuits sont vides
 
 GreedySolver::GreedySolver(Instance* inst) : Solver::Solver(inst) {
+	this->solution = new Solution(inst);
     name = "GreedySolver";
     desc = "Solver par méthode glouton (intelligent)";
     cerr << "\nGreedySolver non implémenté : AU BOULOT !" << endl;
@@ -15,6 +16,7 @@ GreedySolver::GreedySolver(Instance* inst) : Solver::Solver(inst) {
 }
 GreedySolver::~GreedySolver()  {
     // TODO
+	delete this->solution;
 }
 // Méthode principale de ce solver, principe :
 //
@@ -24,8 +26,8 @@ bool GreedySolver::solve() {
     found = false;
 
 
-    this->solution = new Solution(inst);
-    Solution* tmp_sol = new Solution(inst);
+
+    Solution tmp_sol = Solution(inst);
 
     cout << "debut du remplissage des remorques" << endl;
 
@@ -36,7 +38,7 @@ bool GreedySolver::solve() {
     /* minimisation du déséquilibre et des distances */
 
     Options* args = Options::args;
-        const string sinserter = args->station_inserter;
+        string sinserter = args->station_inserter;
         const string schooser = args->station_chooser;
         const string rchooser = args->remorque_chooser;
 
@@ -59,13 +61,34 @@ bool GreedySolver::solve() {
     else{
     	station_list = inst->stations;
     }
+    int iterateur = 0;
     for(auto it = station_list->begin(); it != station_list->end(); ++it){
+
+    	time_t t0;
+    	time(&t0);
+
+
     	auto best_id = -1;
     	Best_Cost = 999999999;
     	Best_iterateur = -2;
     	Station* station = *it;
-    	logn2("GreedySolver::solve ajout de la station : "+U::to_s(*station));
+    	logn1("GreedySolver::solve ajout de la station : "+U::to_s(iterateur));
+    	iterateur++;
 
+    	vector<Circuit*>* circuit_list;
+
+        if(rchooser == "SORTED"){
+        	 circuit_list = tmp_sol.circuits;
+        	std::sort (circuit_list->begin(), circuit_list->end());
+        }
+        else if(rchooser == "RSORTED"){
+            circuit_list = tmp_sol.circuits;
+            std::sort (circuit_list->begin(), circuit_list->end());
+            std::reverse(circuit_list->begin(), circuit_list->end());
+        }
+        else{
+        	circuit_list = tmp_sol.circuits;
+        }
 
 
     	/** Pour chaque station, on determine le circuit le mieu adapté (qui minimise les desequilibre et eventullement la distance)
@@ -74,8 +97,10 @@ bool GreedySolver::solve() {
     	// On parcours les différentes remorques à laquelle on pourrait atribuer la station
     	for(auto remorque_id = 0; remorque_id < inst->remorques->size(); remorque_id++)
     	{
+
+
     		logn7("greedy::solve Before attribution Circuit");
-    		Circuit* circuit = tmp_sol->circuits->at(remorque_id);
+    		Circuit* circuit = tmp_sol.circuits->at(remorque_id);
     		logn7("greedy::solve attribution de la station " + U::to_s(*station) + " à la remorque " + U::to_s(*(circuit->remorque)));
     		// On ajoute la station dans un circuit temporaire
     		int insert_iterateur = -2;
@@ -132,6 +157,7 @@ bool GreedySolver::solve() {
 				if (sinserter == "MYINSERT") {
 					Best_iterateur = insert_interateur;
 				}
+
 			}
 			#endif
 
@@ -146,11 +172,11 @@ bool GreedySolver::solve() {
 					Best_iterateur = insert_iterateur;
 				}
 
-				/*#ifdef OPTIM_JUST_DESEQUILIBRE
+
 				// Si le desequilibre est nul, on peut choisir cette remorque (on ne trouvera pas mieu)
-				if(circuit->desequilibre == 0)
+				if(Best_Cost == 0)
 					break;
-				#endif*/
+
 			}
 			#endif
 
@@ -179,7 +205,7 @@ bool GreedySolver::solve() {
 		#endif
 
 		Circuit* best_circuit = this->solution->circuits->at(best_id);
-		Circuit* tmp_circuit = tmp_sol->circuits->at(best_id);
+		Circuit* tmp_circuit = tmp_sol.circuits->at(best_id);
 
 		// On ajoute la station au circuit choisis
 		if (sinserter == "FRONT") {
@@ -225,7 +251,8 @@ bool GreedySolver::solve() {
 		//cout << *best_circuit << endl;
 		//cout << *this->solution->circuits->at(1);
 
-
+		time_t t1;
+		time(&t1);
     }
 
     logn5("Circuit::greedy fin solve, before update");

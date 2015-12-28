@@ -1,12 +1,12 @@
 #include "solver.hpp"
 #include "voisinage.hpp"
 
+double TAU_MIN = 0.001;
 int id_recuit = 1;
 
 AnnealingSolver::AnnealingSolver(Instance* inst) : Solver::Solver(inst) {
     name = "AnnealingSolver";
     desc = "Solver par recuit simulé";
-    cerr << "\nAnnealingSolver non implémenté : AU BOULOT !" << endl;
     //exit(1);
 }
 AnnealingSolver::~AnnealingSolver()  {
@@ -37,21 +37,41 @@ bool AnnealingSolver::solve() {
 	/******************************************************************/
 
 	Solution* sol = new Solution(inst);
-	double T = 10.0; // température initiale
-	double tau = 1.0; // taux d'acceptation, sert pour le critère de convergence
-	double p = 1.0; // init de la proba de garder une sol moins bonne
-	double proba;
-	int max_prop = 100;
+	int max_prop = 10;
 
-	sol = apply_one_greedy(sol);
+	//sol = apply_one_greedy(sol);
+	GreedySolver* solver = new GreedySolver(inst);
+	solver->solve();
+
+	if (solver->found)
+		sol = solver->get_solution();
+	else
+		U::die("AnnealingSolver::Solve : echec du greedy");
+
+
+	bool is_valid = true;
+	for (auto it = sol->circuits->begin();
+				it != sol->circuits->end();
+				++it) {
+		if ( (*it)->length == 0 ) {
+			is_valid = false;
+		}
+	}
+	if(!is_valid)
+		U::die("Annealing::solve Pas valide");
+
+
+
 	this->solution = sol;
+	int desequilibre_sol = (sol->get_cost() - sol->get_cost()%1000000)/1000000;
+	sol = this->apply_one_recuit(sol, 0.1*desequilibre_sol, 0.90, max_prop, args->itermax);
 
-	sol = this->apply_one_recuit(sol, T, 0.9, max_prop, args->itermax);
-
-	sol = this->apply_one_recuit(sol, 1000000, 0.9, max_prop, args->itermax);
+	//dans le deuxieme recuit on utilise un voisinage plus grossier
+	sol = this->apply_one_recuit(sol, 0.1*sol->get_cost(), 0.90, 10*max_prop, 2*args->itermax);
 
 	/* récup de la sol et fin fct */
 	this->solution = sol;
+	//delete sol;
     sol->update();
     this->solution->update();
     this->found = true;
@@ -74,21 +94,21 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
     srand(args->seed);
     // Par défaut (-1) on ne fait qu'une seule itération
     int itermax =  nb_iteration_max == -1 ? 1 : nb_iteration_max;
+
+    // Best_sol = new Solution(inst);
     Solution* Best_sol = sol;
-
-
 	/******************************************************************/
 
 	Solution* tmp_sol = new Solution(inst);
-	tmp_sol = sol;
+	tmp_sol->copy(sol);
 	double T = T0; // température initiale
 	double tau = 1.0; // taux d'acceptation, sert pour le critère de convergence
 	double p = 1.0; // init de la proba de garder une sol moins bonne
 	double proba;
 	int max_prop = nb_explo_voisin;
-
-	/* appel à un glouton pour générer une première solution */
-
+	bool derniere_variation = false;
+	double T_init_petite_variation;
+	int iter_init_petite_variation;
 
 
 	/* grosse boucle des familles */
@@ -100,29 +120,30 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 	ofstream csv_file("Recuit"+U::to_s(id_recuit)+".csv", ios::out | ios::trunc);
 
 	csv_file << "Iter,Temp,Cost,Taux d'acceptation,proba" << endl;
-
+	csv_file << iter << "," << T << "," << tmp_sol->get_cost() << "," << tau << "," << p << endl;
+;
 	if(csv_file){
-		while ( (tau>0.001)&&(iter<itermax) ) {
+		while ( (tau>TAU_MIN)&&(iter<itermax) ) {
 
-			// mise à jour de la température. La coder dans une fonction à part ?
 
-			T = coeff_maj_T0*T;
+
+
 
 
 			int count_proposition = 0;
 			int count_accepted_proposition = 0;
 			for (int i=0; i < max_prop; ++i) {
 				// tirage d'une solution voisine
-				Solution* voisin = new Solution(solution->inst);
-				voisin = select_voisin(tmp_sol);
+				Solution voisin = Solution(inst);
+				select_voisin(&voisin, tmp_sol, id_recuit);//pas les même voisinage suivant le nuemros de recuit
 				/*cout << "######### sol ###########" << endl;
 				cout << sol->to_s_long() << endl;
 				cout << "######### voisin ###########" << endl;
 				cout << voisin->to_s_long() << endl;*/
 				// On doit vérifier que chaque remorque visite au moins une station
 				bool is_valid = true;
-				for (auto it = voisin->circuits->begin();
-							it != voisin->circuits->end();
+				for (auto it = voisin.circuits->begin();
+							it != voisin.circuits->end();
 							++it) {
 					if ( (*it)->length == 0 ) {
 						is_valid = false;
@@ -137,16 +158,18 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 					int tmp_sol_cost;
 					int Best_sol_cost;
 					if(id_recuit == 1){
-						voisin_cost = voisin->desequilibre;
+						voisin_cost = voisin.desequilibre;
 						tmp_sol_cost = tmp_sol->desequilibre;
 					}
 					else{
-						voisin_cost = voisin->get_cost();
+						voisin_cost = voisin.get_cost();
 						tmp_sol_cost = tmp_sol->get_cost();
 					}
+					//cout << "voisin_cost : " << voisin_cost << ", sol_cost : " << tmp_sol_cost << endl;
+
 					if ( voisin_cost < tmp_sol_cost ) {
 						// voisin meilleur que la solution actuelle :
-						tmp_sol = voisin;
+						tmp_sol->copy(&voisin);
 						if (log2()) {
 							//cout << "-" << flush;
 						}
@@ -166,13 +189,13 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 						}
 						if ( tmp_sol_cost < Best_sol_cost ) {
 							// voisin meilleur que la meilleure solution
-							Best_sol = voisin;
+							Best_sol->copy(&voisin);
 							if (log2()) {
-								cout << "\n" << iter << ": " << voisin->get_cost();
+								cout << "\n" << iter << ": " << voisin.get_cost();
 							}
 						// On enregistre cette solution dans un fichier temporaire
-						string tmpname = this->solution->get_tmp_filename();
-						U::write_file(tmpname, this->solution->to_s());
+						//string tmpname = this->solution->get_tmp_filename();
+						//U::write_file(tmpname, this->solution->to_s());
 						}
 
 					} else {								// voisin pas meilleur, testons si oui ou non on le garde
@@ -190,7 +213,7 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 							cout << voisin->to_s_long() << endl;*/
 
 							// voisin accepté
-							tmp_sol = voisin;
+							tmp_sol->copy(&voisin);
 
 							//cout << "+" << flush;
 
@@ -207,12 +230,15 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 						}
 
 					}
+				//cout << "voisin_cost : " << voisin_cost << ", tmp_cost : " << tmp_sol_cost << ", p : " << p << endl;
 				} else {
 					// voisin invalide
 					// log2("x"); // afficherait "L2x" or on veut seulement "x"
 					if (log2()) { cout << "x" << flush; }
 				}
 				count_proposition++;
+
+
 			}
 
 			iter++;
@@ -222,17 +248,44 @@ Solution* AnnealingSolver::apply_one_recuit(Solution* sol, double T0, double coe
 			cout << "count_accepted_proposition : " << count_accepted_proposition << endl;
 			cout << "tau : " << tau << endl;
 			csv_file << iter << "," << T << "," << tmp_sol->get_cost() << "," << tau << "," << p << endl;
+			//if(iter == 1)
+				//U::die("voisin_cost");
+			// MAJ temperature
+			//a la fin, on redonne un coup de boost a la temperature
+			if(tau<TAU_MIN && !derniere_variation && id_recuit == 2){
+				derniere_variation=true;
+				T=1.1*T;
+				tau = 1.1*TAU_MIN;
+				T_init_petite_variation = T;
+				iter_init_petite_variation = iter;
+			}
+
+			if(!derniere_variation || id_recuit == 1)
+				T = coeff_maj_T0*T;
+			else if(derniere_variation){
+				T = T_init_petite_variation*log(double(iter_init_petite_variation))/log(double(iter));
+			}
+
+
+			/*if(tau<TAU_MIN && derniere_variation && id_recuit == 2){
+				derniere_variation=false;
+				T=0.2*T0;
+				coeff_maj_T0 = 1-0.5*(1-coeff_maj_T0);
+				tau = 1.1*TAU_MIN;
+			}*/
 
 		} // \while
 		csv_file.close();
 	}
 	else{
-		U::die("AnnealingSolver::Solve Erreur ouverture du csv file");
+		U::die("AnnealingSolver::apply_one_recuit Erreur ouverture du csv file");
 	}
 
 	if (log2()) { cout << endl << flush; } // on ne veut pas voir le prefix "L2:"
 	logn2("AnnealingSolver::solve: END");
 	id_recuit++;
+
+
 	return Best_sol;
 }
 

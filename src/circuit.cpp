@@ -172,8 +172,8 @@ void Circuit::equilibrate() {
         		charge_init_max -= delta_charge_deficit;
 
 
-        		if (charge_init_max < 0)//recoupe le cas du dessus
-        			charge_init_max = 0;
+        		/*if (charge_init_max < 0)//recoupe le cas du dessus
+        			charge_init_max = 0;*/
         		if(charge_init_max<=charge_init_min){
         			charge_init_finded=true;
         			charge_init_max = charge_init_min;
@@ -738,6 +738,48 @@ list<Station*>::iterator Circuit::my_insert(Station* s){
 }
 
 int Circuit::my_insertCost(Station* s, int& Best_iterateur){
+
+
+	/** ensemble d'heuristique evitant la boucle dans certain cas **/
+
+	/* si le desequilibre est nul et qu'a la fin du circuit il reste dans la
+	 * remorque assez de vélo pour annuler le déficit de la station, on peut la
+	 * mettre en back */
+
+
+	/* si le desequilibre est nul et que on peut jouer (à la hausse  ou à la baisse)
+	 * sur la charge initial de la remorque de manière à annuler entièrement le
+	 * déficit de la station, on insert en FRONT */
+
+
+	if(s->deficit() >= 0){
+		if((*this->charges)[*this->stations->end()] >= s->deficit() && this->desequilibre == 0){
+			Best_iterateur = -1;
+			return 0;
+		}
+		else if(this->charge_init_max >= s->deficit()
+						&& this->desequilibre == 0){
+			Best_iterateur = 0;
+			return 0;
+		}
+	}
+	else{
+		if(this->remorque->capa - (*this->charges)[*this->stations->end()] >= -s->deficit() && this->desequilibre == 0){
+			Best_iterateur = -1;
+			return 0;
+		}
+		else if(this->remorque->capa - this->charge_init_min >= -s->deficit()
+						&& this->desequilibre == 0){
+					Best_iterateur = 0;
+					return 0;
+				}
+
+	}
+
+
+
+
+
 	/* un circuit peut etre divisé en deux parties : une ou tout les desequilibres sont nuls (le début du circuit),
 	 * et le complémentaire de cette partie. On introduit une variable boolenne FirstPart pour savoir dans quelle partie on se situe
 	 */
@@ -1380,6 +1422,14 @@ std::ostream& operator<<(ostream &flux, Circuit const& circuit){
 
     return flux;
 
+}
+
+
+bool operator<(Circuit const& c1, Circuit const& c2){
+	if(c1.remorque->capa < c2.remorque->capa)
+		return true;
+	else
+		return false;
 }
 //./
 

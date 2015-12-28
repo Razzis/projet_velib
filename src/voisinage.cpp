@@ -2,7 +2,7 @@
 #include "solution.hpp"
 
 
-void exchange( Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
+void exchange(Solution* voisin,  Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 , int id_recuit) {
 	
 	// on v�rfifie que les stations � �changer existent bien
 	//if ( pos1 > circuit1->size() )||( pos2 > circuit2->size() ) {
@@ -23,22 +23,48 @@ void exchange( Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
 	
 	logn5("Voisin::exhange Insertion : TRY");
 	logn5("Voisin::exhange Insertion : TRY");
-	circuit1->insert( station2, pos1);
-	circuit2->insert( station1, pos2);
+
+	int old_desequilibre_c1 = circuit1->desequilibre;
+	int old_length_c1 = circuit1->length;
+	int old_desequilibre_c2 = circuit2->desequilibre;
+	int old_length_c2 = circuit2->length;
+
+	if(id_recuit == 1){
+	//si on erase apres, les it ne sont plus bon ?
+		circuit1->stations->erase(it1);
+		circuit2->stations->erase(it2);
+		circuit1->update();//pour que les cout du erase soit compté
+		circuit2->update();
+		//circuit1->insert( station2, pos1);
+		//circuit2->insert( station1, pos2);
+
+		circuit1->my_insert( station2);
+		circuit2->my_insert( station1);
+	}
+	else{
+		circuit1->insert( station2, pos1);
+		circuit2->insert( station1, pos2);
+
+		circuit1->stations->erase(it1);
+		circuit2->stations->erase(it2);
+	}
 
 	logn5("Voisin::exhange Insertion OK");
 
-	circuit1->stations->erase(it1);
-	circuit2->stations->erase(it2);
 
-	circuit1->update(); // utile ?
-	circuit2->update();
+
+	//circuit1->update(); // utile ?
+	//circuit2->update();
+	if(circuit1 != circuit2)
+		voisin->Partial_update(circuit1,circuit2, old_desequilibre_c1, old_length_c1, old_desequilibre_c2, old_length_c2);
+	else
+		voisin->Partial_update(circuit1, old_desequilibre_c1, old_length_c1);
 	logn5("Voisin::exhange END");
 
 }
 
 
-void take( Circuit* circuit1, int pos1, Circuit* circuit2, int pos2 ) {
+void take(Solution* voisin, Circuit* circuit1, int pos1, Circuit* circuit2, int pos2 , int id_recuit) {
 
 	auto it1 = circuit1->stations->begin();
     for (int i = 0; i < pos1; ++i) {
@@ -50,18 +76,35 @@ void take( Circuit* circuit1, int pos1, Circuit* circuit2, int pos2 ) {
     }
 
 	Station* station = *it1;
-	circuit2->insert( station, pos2);
-	circuit1->stations->erase(it1);
+	//circuit2->insert( station, pos2);
+	int old_desequilibre_c1 = circuit1->desequilibre;
+	int old_length_c1 = circuit1->length;
+	int old_desequilibre_c2 = circuit2->desequilibre;
+	int old_length_c2 = circuit2->length;
 
-	circuit1->update(); // utile ?
-	circuit2->update();
+	if(id_recuit == 1){
+		circuit1->stations->erase(it1);
+		circuit1->update();
+		circuit2->my_insert(station);
+	}
+	else{
+		circuit2->insert(station, pos2);
+		circuit1->stations->erase(it1);
+	}
+
+
+	//circuit1->update(); // utile ?
+	//circuit2->update();
+	if(circuit1 != circuit2)
+		voisin->Partial_update(circuit1,circuit2, old_desequilibre_c1, old_length_c1, old_desequilibre_c2, old_length_c2);
+	else
+		voisin->Partial_update(circuit1, old_desequilibre_c1, old_length_c1);
 
 }
 
 
-Solution* select_voisin( Solution* solution ) {
+void select_voisin(Solution* voisin, Solution* solution , int id_recuit) {
 
-	Solution* voisin = new Solution(solution->inst);
 	voisin->copy(solution);
 
 	int maxtry = 10;
@@ -96,9 +139,9 @@ Solution* select_voisin( Solution* solution ) {
 		logn2("station_id2 : " + U::to_s(station_id2));
 		// �change
 		if (( circuit_id1 == circuit_id2 )&&( station_id1 == station_id2 )) {
-			return voisin;
+			//return
 		} else {
-			exchange( c1, c2, station_id1, station_id2 );
+			exchange(voisin, c1, c2, station_id1, station_id2, id_recuit);
 		}
 
 	} else {
@@ -121,12 +164,11 @@ Solution* select_voisin( Solution* solution ) {
 		}
 
 		//d�placement
-		take(from,take_id,to,place_id);
+		take(voisin,from,take_id,to,place_id, id_recuit);
+
 
 	}
 
-	voisin->update();
-	return voisin;
 }
 
 

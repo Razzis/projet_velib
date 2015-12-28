@@ -70,6 +70,7 @@ class Options  {
         //  parser = NULL; // Utile ssi on veut pouvoir tester l'existence de parser !
     }
     ~Options() {
+    	delete parser;
     }
 
     string get_exemples() {
@@ -166,7 +167,9 @@ class Options  {
             exit(1);
         }
         if ( !(this->remorque_chooser=="ALT" ||
-               this->remorque_chooser=="RAND")) {
+        		this->station_chooser=="SORTED" ||
+        		this->station_chooser=="RSORTED" ||
+        		this->remorque_chooser=="RAND")) {
             cerr << "Erreur valeur de remorque_chooser incorrecte : "
                  << this->remorque_chooser << endl;
             cerr << parser->get("--remorque-chooser")->get_help();

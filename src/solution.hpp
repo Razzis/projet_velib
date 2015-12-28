@@ -48,6 +48,14 @@ public:
     // solution (desequilibres, charge_init, ...)
     void update();
 
+    // met à jour 2 circuits, et calcule les attributs dérivés de la
+    // solution (desequilibres, charge_init, ...)
+    void Partial_update(Circuit* c1, Circuit* c2, int old_desequilibre_c1, int old_length_c1, int old_desequilibre_c2, int old_length_c2);
+
+    // met à jour 1 circuits, et calcule les attributs dérivés de la
+    // solution (desequilibres, charge_init, ...)
+    void Partial_update(Circuit* c1, int old_desequilibre_c1, int old_length_c1);
+
     // vrai ssi la solution est acceptable (e.g. les remorques desservent au
     // moins une station, ...; toutes les station sont desservies, ...)
     // bool is_valid();
