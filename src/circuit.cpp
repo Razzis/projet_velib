@@ -467,7 +467,7 @@ void Circuit::maj_Depots(){
     		if (this->remorque->capa - charge_courante >= -station->deficit()){
     			logn3("Circuit::majDepot remrque_capa : "+U::to_s(this->remorque->capa));
     			(*this->desequilibre_courant)[station] = 0;
-    				(*this->depots)[station] = station->deficit();
+    			(*this->depots)[station] = station->deficit();
     		    }
     		else{
     			/*if((*this->charges_init_max)[station] != (*this->charges_init_min)[station]){
@@ -484,13 +484,24 @@ void Circuit::maj_Depots(){
 
     	(*this->charges)[station] = charge_courante - (*this->depots)[station];
     	charge_courante = (*this->charges)[station];
-    	if((*this->charges_init_max)[station] == (*this->charges_init_min)[station])
+
+    	int& _charges_init_max = (*this->charges_init_max)[station];
+    	int& _charges_init_min = (*this->charges_init_min)[station];
+    	/*if((*this->charges_init_max)[station] == (*this->charges_init_min)[station])
     		SecondPart = true;
     	if(SecondPart){
 			(*this->charges_init_max)[station] = this->charge_init;
 			(*this->charges_init_min)[station]= this->charge_init;
 			(*this->charges_courante_max)[station] = charge_courante;
 			(*this->charges_courante_min)[station] = charge_courante;
+    	}*/
+    	if(_charges_init_max == _charges_init_min)
+    	    SecondPart = true;
+    	if(SecondPart){
+    		_charges_init_max = this->charge_init;
+    		_charges_init_min = this->charge_init;
+    		(*this->charges_courante_max)[station] = charge_courante;
+    		(*this->charges_courante_min)[station] = charge_courante;
     	}
 
     	if((*this->desequilibre_courant)[station] > this->desequilibre_max){
@@ -808,7 +819,7 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 				iterateur=-1;
 			Station* station = *it;
 
-			this->update();
+			//this->update();
 			FirstPart = this->is_first_part(it);
 
 			if(FirstPart){
