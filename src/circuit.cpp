@@ -881,8 +881,19 @@ int Circuit::insert_bestCost(Station* station) {
 
 list<Station*>::iterator Circuit::my_insert(Station* s){
 	int Best_iterateur;
-	this->my_insertCost(s, Best_iterateur);
-	return this->insert(s, Best_iterateur);
+	int cost = this->my_insertCost(s, Best_iterateur);
+	list<Station*>::iterator it_insert = this->insert(s, Best_iterateur);
+	/*this->update();
+	int real_cost = this->desequilibre;
+	if(real_cost != cost){
+		cout << "station : " << U::to_s(*s) << endl;
+		cout << "Best_insert : " << Best_iterateur << endl;
+		cout << "cost : " << cost << endl;
+		cout << "real_cost : " << real_cost << endl;
+		cout << *this << endl;
+		U::die("real_cost != cost");
+	}*/
+	return it_insert;
 
 }
 
@@ -900,31 +911,39 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 	 * sur la charge initial de la remorque de manière à annuler entièrement le
 	 * déficit de la station, on insert en FRONT */
 
+//cout << *this << endl;
+	if(this->stations->size() != 0){
+		if(s->deficit() >= 0){
+			if((*this->charges_courante_min)[*(--this->stations->end())] >= s->deficit() && this->desequilibre == 0){
+				Best_iterateur = -1;
+				//cout << "coucou1" << endl;
+				return 0;
+			}
+			else if(this->remorque->capa - this->charge_init_max >= s->deficit()
+							&& this->desequilibre == 0){
+				Best_iterateur = 0;
+				//cout << "coucou3" << endl;
+				return 0;
+			}
+		}
+		else{
+			if(this->remorque->capa - (*this->charges_courante_max)[*(--this->stations->end())] >= -s->deficit() && this->desequilibre == 0){
+				Best_iterateur = -1;
+				/*Station* Last_Station = *(--this->stations->end());
+				cout << "Station : " << U::to_s(*Last_Station) << endl;
+				cout << "coucou2 : " << (*this->charges_courante_min)[*(--this->stations->end())] << endl;*/
+				return 0;
+			}
+			else if(this->charge_init_min >= -s->deficit()
+							&& this->desequilibre == 0){
+						Best_iterateur = 0;
+						//cout << "coucou4" << endl;
+						return 0;
+					}
 
-	if(s->deficit() >= 0){
-		if((*this->charges)[*this->stations->end()] >= s->deficit() && this->desequilibre == 0){
-			Best_iterateur = -1;
-			return 0;
 		}
-		else if(this->charge_init_max >= s->deficit()
-						&& this->desequilibre == 0){
-			Best_iterateur = 0;
-			return 0;
-		}
+
 	}
-	else{
-		if(this->remorque->capa - (*this->charges)[*this->stations->end()] >= -s->deficit() && this->desequilibre == 0){
-			Best_iterateur = -1;
-			return 0;
-		}
-		else if(this->remorque->capa - this->charge_init_min >= -s->deficit()
-						&& this->desequilibre == 0){
-					Best_iterateur = 0;
-					return 0;
-				}
-
-	}
-
 
 
 
@@ -940,7 +959,20 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 	list<Station*>::iterator it2;
 
 	//tentative d'insertion en toute première position
-	BestCost = this->my_insertFirstPartCost_First_Station(s);
+
+	it2 = this->insert(s,0);
+	this->update();
+
+	//tentative d'insertion en toute première position
+	//int real_cost = this->desequilibre;
+	BestCost = this->desequilibre;
+	this->stations->erase(it2);
+	this->update();
+
+	//BestCost = this->my_insertFirstPartCost_First_Station(s);
+	//cout << *this << endl;
+	//if(BestCost != real_cost)
+	//	U::die("BestCost != real_cost ("+U::to_s(BestCost)+","+U::to_s(real_cost));
 	Best_iterateur = 0;
 	Cost = BestCost;
 
@@ -967,8 +999,8 @@ int Circuit::my_insertCost(Station* s, int& Best_iterateur){
 				it2 = this->insert(s,iterateur);
 
 				this->update();
-*/
-				/*int realCost = this->get_cost();
+
+				int realCost = this->get_cost();
 				cout << "REAL" << endl;
 				cout << *this << endl;
 				cout << "REAL" << endl;
@@ -1330,8 +1362,8 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 	logn2("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
 	bool SecondPartExiste, stationAddedAsFirstOf2Part;
 	list<Station*>::iterator it_second_part;
-	int deficit_from_partial_update;
-	int desequilibre_before_SecondPart;
+	int deficit_from_partial_update;//deficit à absorber engendré par l'insertion
+	int desequilibre_before_SecondPart;//desequilibre qui était induit par la aprtie éventuelle de la seconde aprt qui se trouve transformée en first part
 	int Charge_init = this->Partial_equilibrate_First_Station(s, it_second_part, SecondPartExiste, stationAddedAsFirstOf2Part,
 			deficit_from_partial_update, desequilibre_before_SecondPart);
 
@@ -1358,6 +1390,8 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 
 		if(stationAddedAsFirstOf2Part){
 			logn2("Circuit::my_insertFirstPart To SecondPart");
+			deficit_a_absorber -= charge_init_old-charge_init_new;
+			desequilibre_circuit += s->deficit() - (charge_init_new - charge_init_old);
 			//return this->my_insertSecondPart(s,it2insert);
 		}
 
@@ -1483,8 +1517,13 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						desequilibre_circuit += -desequilibre_courant;
 						deficit_a_absorber -= -(desequilibre_courant);
 						desequilibre_courant = 0;
+
+						logn2("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
+						logn2("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
+						logn2("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
+
 						if(deficit_a_absorber < 0)
-							U::die("Circuit::my_insertFirst insert4");//normalement ça n'arrive pas
+							U::die("Circuit::my_insertFirstFirst insert4");//normalement ça n'arrive pas
 
 						logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 					}

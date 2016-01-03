@@ -24,6 +24,10 @@ int main(int argc, char *argv[]) {
     cout << "args->filename=" << args->filename << endl;
     cout << "args->outfilename=" << args->outfilename << endl;
 
+    ofstream csv_file(args->station_inserter+".csv", ios::out | ios::app);
+
+
+
 
 
 
@@ -127,6 +131,7 @@ int main(int argc, char *argv[]) {
                  << solver->solution->get_cost_string()
                  << " (soit " << solver->solution->get_cost() << ")"
                  << endl;
+            csv_file << solver->solution->desequilibre << ",";
         } else {
             cout << "Solver : pas de solution "  << endl;
         }
@@ -192,6 +197,7 @@ int main(int argc, char *argv[]) {
     time(&end_time);
     double diff = difftime(end_time, start_time);
     printf("Temps de calcul:\t %.1fs\n", diff);
+    csv_file << diff << endl;
     // cout << "Temps de calcul:\t" << diff << "s" << endl << endl;
 
 
