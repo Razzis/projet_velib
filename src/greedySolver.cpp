@@ -49,21 +49,58 @@ bool GreedySolver::solve() {
     int Best_Cost;
     int Best_iterateur;
     vector<Station*>* station_list;
+
+    vector<Station*>* station_list_pos = new vector<Station*>();//contient eventuellement les stations de deficit >0
+    vector<Station*>* station_list_neg = new vector<Station*>();//contient eventuellement les stations de deficit <0
     if(schooser == "SORTED"){
     	station_list = inst->stations;
-    	std::sort (station_list->begin(), station_list->end());
+    	std::sort (station_list->begin(), station_list->end(), compare_station);
+    }
+    if(schooser == "DOUBLE"){
+        	station_list = inst->stations;
+        	std::sort (station_list->begin(), station_list->end(), compare_station);
+
+        	*station_list_pos = vector<Station*>(*(inst->stations));
+        	*station_list_neg = vector<Station*>(*(inst->stations));
+
+        	filtrate_list(station_list_pos, station_list_neg);
+        	std::sort (station_list_pos->begin(), station_list_pos->end(), compare_station);
+
+        	std::sort (station_list_neg->begin(), station_list_neg->end(), compare_station);
+        	//std::reverse(station_list->begin(), station_list->end());
+
+        	for(auto it = station_list_pos->begin(); it != station_list_pos->end(); ++it){
+        		Station* station = *it;
+        		cout << "station_pos " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
+        	}
+        	for(auto it = station_list_neg->begin(); it != station_list_neg->end(); ++it){
+				Station* station = *it;
+				cout << "station_neg " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
+        	}
+        	cout << "pos size : " << station_list_pos->size() << endl;
+        	cout << "neg size : " << station_list_neg->size() << endl;
+        	/*U::die("test");*/
     }
     else if(schooser == "RSORTED"){
         station_list = inst->stations;
-        std::sort (station_list->begin(), station_list->end());
+        std::sort (station_list->begin(), station_list->end(), compare_station);
         std::reverse(station_list->begin(), station_list->end());
     }
     else{
     	station_list = inst->stations;
     }
     int iterateur = 0;
-    for(auto it = station_list->begin(); it != station_list->end(); ++it){
+    int iterateur_neg = 0;
+    int iterateur_pos = 0;
 
+
+    Station* station;
+    int Cost_insert_neg;
+    int Cost_insert_pos;
+    bool pos_deficit_choosed;
+    for(auto it = station_list->begin(); it != station_list->end(); ++it){
+    	if (sinserter != "DOUBLE")
+    		station = *it;
     	time_t t0;
     	time(&t0);
 
@@ -71,23 +108,34 @@ bool GreedySolver::solve() {
     	auto best_id = -1;
     	Best_Cost = 999999999;
     	Best_iterateur = -2;
-    	Station* station = *it;
+
+
+
     	logn1("GreedySolver::solve ajout de la station : "+U::to_s(iterateur));
     	iterateur++;
 
     	vector<Circuit*>* circuit_list;
+    	vector<Circuit*>* sol_circuit_list;
 
         if(rchooser == "SORTED"){
         	 circuit_list = tmp_sol.circuits;
-        	std::sort (circuit_list->begin(), circuit_list->end());
+        	std::sort (circuit_list->begin(), circuit_list->end(), compare_circuit);
+
+        	sol_circuit_list = this->solution->circuits;
+        	std::sort (sol_circuit_list->begin(), sol_circuit_list->end(), compare_circuit);
         }
         else if(rchooser == "RSORTED"){
             circuit_list = tmp_sol.circuits;
-            std::sort (circuit_list->begin(), circuit_list->end());
+            std::sort (circuit_list->begin(), circuit_list->end(), compare_circuit);
             std::reverse(circuit_list->begin(), circuit_list->end());
+
+            sol_circuit_list = this->solution->circuits;
+            std::sort (sol_circuit_list->begin(), sol_circuit_list->end(), compare_circuit);
+            std::reverse(sol_circuit_list->begin(), sol_circuit_list->end());
         }
         else{
         	circuit_list = tmp_sol.circuits;
+        	sol_circuit_list = this->solution->circuits;
         }
 
 
@@ -95,21 +143,67 @@ bool GreedySolver::solve() {
     	 * et on l'ajoute au circuit concerné
     	 */
     	// On parcours les différentes remorques à laquelle on pourrait atribuer la station
-    	for(auto remorque_id = 0; remorque_id < inst->remorques->size(); remorque_id++)
+    	for(auto remorque_id = 0; remorque_id < tmp_sol.circuits->size(); remorque_id++)
     	{
 
 
     		logn7("greedy::solve Before attribution Circuit");
-    		Circuit* circuit = tmp_sol.circuits->at(remorque_id);
-    		logn7("greedy::solve attribution de la station " + U::to_s(*station) + " à la remorque " + U::to_s(*(circuit->remorque)));
+    		Circuit* circuit = (*circuit_list)[remorque_id];
+
     		// On ajoute la station dans un circuit temporaire
     		int insert_iterateur = -2;
     		int Cost_insert;
     		list<Station*>::iterator it_insert;
     		if (sinserter == "FRONT") {
     			Cost_insert = circuit->insertCost(station);
+    		} else if (sinserter == "DOUBLE") {
+    			Cost_insert_neg = 999999999;
+    			if(iterateur_neg < station_list_neg->size()){
+    				Cost_insert_neg = circuit->insertCost(station_list_neg->at(iterateur_neg), -1);
+    				Cost_insert_neg = (Cost_insert_neg-Cost_insert_neg%1000000)/1000000;
+
+    			}
+    			Cost_insert_pos = 99999999;
+    			if(iterateur_pos < station_list_pos->size()){
+    				Cost_insert_pos = circuit->insertCost(station_list_pos->at(iterateur_pos), -1);
+    				Cost_insert_pos = (Cost_insert_pos-Cost_insert_pos%1000000)/1000000;
+
+    			}
+    			/*cout << "iterateur pos : " << iterateur_pos << endl;
+				cout << "iterateur neg : " << iterateur_neg << endl;
+				cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
+				cout << "Cost_insert_pos : " << Cost_insert_pos << endl;
+				cout << "Cost_insert_neg : " << Cost_insert_neg << endl;*/
+    			if((Cost_insert_pos > Cost_insert_neg || iterateur_pos == station_list_pos->size())&& iterateur_neg < station_list_neg->size()){
+
+    				Cost_insert = Cost_insert_neg;
+
+    				station = (station_list_neg->at(iterateur_neg));
+
+
+
+
+    			}
+    			else if(Cost_insert_pos <= Cost_insert_neg && iterateur_pos < station_list_pos->size()){
+
+    				Cost_insert = Cost_insert_pos;
+    				//cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
+    				station = (station_list_pos->at(iterateur_pos));
+    				//cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
+
+    			}
+    			else{
+    				cout << "iterateur pos : " << iterateur_pos << endl;
+    				cout << "iterateur neg : " << iterateur_neg << endl;
+    				cout << "Cost_insert_pos : " << Cost_insert_pos << endl;
+    				cout << "Cost_insert_neg : " << Cost_insert_neg << endl;
+    				U::die("GReedy::double erreur");
+    			}
+
+    			//Cost_insert = (Cost_insert-Cost_insert%1000000)/1000000;
     		} else if (sinserter == "BACK") {
     			Cost_insert = circuit->insertCost(station, -1);
+    			Cost_insert = (Cost_insert-Cost_insert%1000000)/1000000;
     		} else if (sinserter == "BEST") {
     			//Cost_insert = circuit->insert_bestCost(station);
 
@@ -137,6 +231,8 @@ bool GreedySolver::solve() {
     		else {
     			U::die("station_inserter inconnu : " + U::to_s(sinserter));
     		}
+    		logn7("greedy::solve attribution de la station " + U::to_s(*station) + " à la remorque " + U::to_s(*(circuit->remorque)));
+    		//cout << "inserer " << U::to_s(*station) << " dans " << U::to_s(*(circuit->remorque)) << " coute : " << Cost_insert << endl;
 
     		logn5("greedy::solve insertion de la station dans le circuit : done");
 
@@ -167,6 +263,12 @@ bool GreedySolver::solve() {
 			if(Cost_insert < Best_Cost){
 				// On cherche à determiner la meilleur remorque à laquelle ajouter la station
 				best_id = remorque_id;
+				if (sinserter == "DOUBLE") {
+					if(Cost_insert == Cost_insert_pos)
+						pos_deficit_choosed = true;
+					else
+						pos_deficit_choosed = false;
+				}
 				Best_Cost = Cost_insert;
 				if (sinserter == "MYINSERT") {
 					Best_iterateur = insert_iterateur;
@@ -203,9 +305,24 @@ bool GreedySolver::solve() {
     		all_circuit_non_vide = true;
     	}
 		#endif
+    	if(iterateur >= station_list->size()-(tmp_sol.circuits->size()+1)){//si à la fin certaine remorque n'ont pas été rempli, on rempli avec les dernière station
+    		for(auto id = 0; id < tmp_sol.circuits->size(); id++){
+    			if((*sol_circuit_list)[id]->stations->size() == 0){
+    				best_id = id;
+    				break;
+    			}
+    		}
+    	}
 
-		Circuit* best_circuit = this->solution->circuits->at(best_id);
-		Circuit* tmp_circuit = tmp_sol.circuits->at(best_id);
+
+		Circuit* best_circuit = (*sol_circuit_list)[best_id];
+		Circuit* tmp_circuit = (*circuit_list)[best_id];
+		if(sinserter == "DOUBLE") {
+			if(pos_deficit_choosed)
+				station = (station_list_pos->at(iterateur_pos));
+			else
+				station = (station_list_neg->at(iterateur_neg));
+		}
 
 		// On ajoute la station au circuit choisis
 		if (sinserter == "FRONT") {
@@ -214,7 +331,11 @@ bool GreedySolver::solve() {
 		} else if (sinserter == "BACK") {
 			best_circuit->insert(station, -1);
 			tmp_circuit->insert(station, -1);
-		} else if (sinserter == "BEST") {
+		}
+		else if (sinserter == "DOUBLE") {
+			best_circuit->insert(station, -1);
+			tmp_circuit->insert(station, -1);
+		}else if (sinserter == "BEST") {
 			best_circuit->insert_best(station);
 			tmp_circuit->insert_best(station);
 		} else if (sinserter == "MYINSERT") {
@@ -245,8 +366,15 @@ bool GreedySolver::solve() {
 			U::die("station_inserter inconnu : " + U::to_s(sinserter));
 		}
 
+		if (station->deficit()>=0)
+			iterateur_pos++;
+		else
+			iterateur_neg++;
+
 
 		best_circuit->update();
+
+		//cout << *best_circuit << endl;
 		tmp_circuit->update();
 		//cout << *best_circuit << endl;
 		//cout << *this->solution->circuits->at(1);
@@ -258,7 +386,8 @@ bool GreedySolver::solve() {
     logn5("Circuit::greedy fin solve, before update");
     this->solution->update();
     this->found = true;
-
+    delete station_list_pos;
+    delete station_list_neg;
     return found;
 }
 

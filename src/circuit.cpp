@@ -2059,8 +2059,8 @@ std::ostream& operator<<(ostream &flux, Circuit const& circuit){
 }
 
 
-bool operator<(Circuit const& c1, Circuit const& c2){
-	if(c1.remorque->capa < c2.remorque->capa)
+bool compare_circuit(Circuit* const c1, Circuit* const c2){
+	if(c1->remorque->capa < c2->remorque->capa)
 		return true;
 	else
 		return false;

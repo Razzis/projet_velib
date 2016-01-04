@@ -44,10 +44,29 @@ int Station::margin() {
 int Station::deficit() {
     return this->ideal - this->nbvp;
 }
-bool operator<(Station const& s1, Station const& s2){
-	if((s1.ideal - s1.nbvp) < (s2.ideal - s2.nbvp))
+bool compare_station(Station* const s1, Station* const s2){
+	if(s1->ideal - s1->nbvp < s2->ideal - s2->nbvp)
 		return true;
 	else
 		return false;
 }
+void filtrate_list(vector<Station*>* station_list_pos, vector<Station*>* station_list_neg){
+
+	auto it_neg = station_list_neg->begin();
+	for(auto it_pos = station_list_pos->begin(); it_pos != station_list_pos->end(); ++it_pos){
+		Station* station = *it_pos;
+		if(station->deficit() >= 0){
+			station_list_neg->erase(it_neg,station_list_neg->end());
+			station_list_pos->erase(station_list_pos->begin(),it_pos--);
+			break;
+		}
+		++it_neg;
+
+	}
+
+
+
+}
+
+
 //./

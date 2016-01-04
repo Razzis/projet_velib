@@ -33,5 +33,6 @@ public:
     virtual string to_s_long();
 
 };
-bool operator<(Station const& s1, Station const& s2);
+bool compare_station(Station* const s1, Station* const s2);
+void filtrate_list(vector<Station*>* station_list_pos, vector<Station*>* station_list_neg);
 #endif
