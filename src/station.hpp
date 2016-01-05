@@ -18,6 +18,11 @@ public:
     int ideal; // nombre idéla de vélo dans la station
     int nbvp;   // nombre de véo présent
 
+    //utile pour trier les stations
+    int barycentre_remorque_x;
+    int barycentre_remorque_y;
+    int dist_barycentre_remorque;
+
     Station(Instance* inst, string name, int x, int y,
                   int capa, int ideal, int nbvp);
 

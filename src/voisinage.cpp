@@ -42,11 +42,14 @@ void exchange(Solution* voisin,  Circuit* circuit1, Circuit* circuit2, int pos1,
 		circuit2->my_insert( station1);
 	}
 	else{
+
 		circuit1->insert( station2, pos1);
 		circuit2->insert( station1, pos2);
 
 		circuit1->stations->erase(it1);
 		circuit2->stations->erase(it2);
+
+
 	}
 
 	logn5("Voisin::exhange Insertion OK");
@@ -90,6 +93,7 @@ void take(Solution* voisin, Circuit* circuit1, int pos1, Circuit* circuit2, int 
 	else{
 		circuit2->insert(station, pos2);
 		circuit1->stations->erase(it1);
+
 	}
 
 

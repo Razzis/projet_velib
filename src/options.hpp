@@ -151,7 +151,8 @@ class Options  {
                this->station_inserter=="BACK" ||
                this->station_inserter=="BEST" ||
                this->station_inserter=="MYINSERT" ||
-               this->station_inserter=="DOUBLE")) {
+               this->station_inserter=="DOUBLE" ||
+               this->station_inserter=="DOUBLE_MYINSERT")) {
             cerr << "Erreur valeur de station_inserter incorrecte : "
                  << this->station_inserter << endl;
             cerr << parser->get("--station-inserter")->get_help();

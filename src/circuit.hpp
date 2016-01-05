@@ -147,6 +147,7 @@ public:
     int insert_bestCost(Station* s);
 
     list<Station*>::iterator my_insert(Station* s);
+    list<Station*>::iterator my_insertTotal(Station* s);
 
     int my_insertCost(Station* s, int& Best_iterateur);
 
@@ -157,11 +158,21 @@ public:
     // Cas particulier où on equilibre l'ajout en toute premiere position
     int my_insertFirstPartCost_First_Station(Station* s);
 
-    int my_insertSecondPart(Station* s, const list<Station*>::iterator& it2insert);
-    //int my_insertFirstPart(Station* s, const list<Station*>::iterator& it2insert);
+    int my_insertTotalCost(Station* s, int& Best_iterateur);
+
+
+    int my_insertSecondPartTotalCost(Station* s, const list<Station*>::iterator& it2insert);
+    int my_insertFirstPartTotalCost(Station* s, const list<Station*>::iterator& it2insert);
+
+    // Cas particulier où on equilibre l'ajout en toute premiere position
+    int my_insertFirstPartTotalCost_First_Station(Station* s);
+
+
 
     bool is_first_part(const list<Station*>::iterator& it);//determine si l'itérateur se trouve dans la partie qui determine lacharge init (first part) ou non
     int compute_cost(Station* s, int desequilibre);
+    int compute_Totalcost(Station* s, int desequilibre, const list<Station*>::iterator& it2insert);
+    int compute_TotalcostFirstPart(Station* s, int desequilibre);
     //retire du circuit la station concerné
     void erase_station(const Station& station, list<Station*>::iterator  it);
 

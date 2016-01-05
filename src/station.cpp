@@ -16,6 +16,20 @@ Station::Station(Instance* inst, string name, int x, int y,
     this->capa = capa;
     this->ideal = ideal;
     this->nbvp = nbvp;
+
+    this->barycentre_remorque_x = 0;
+    this->barycentre_remorque_y = 0;
+
+    for(auto it = inst->remorques->begin(); it != inst->remorques->end(); ++it){
+    	Remorque* remorque = *it;
+    	this->barycentre_remorque_x += remorque->x/inst->remorques->size();
+    	this->barycentre_remorque_y += remorque->y/inst->remorques->size();
+    }
+
+    this->dist_barycentre_remorque = (this->barycentre_remorque_x-this->x)*(this->barycentre_remorque_x-this->x)
+    		+ (this->barycentre_remorque_y-this->y)*(this->barycentre_remorque_y-this->y);
+
+
 }
 Station::~Station() {
 }
@@ -45,7 +59,11 @@ int Station::deficit() {
     return this->ideal - this->nbvp;
 }
 bool compare_station(Station* const s1, Station* const s2){
+
+
 	if(s1->ideal - s1->nbvp < s2->ideal - s2->nbvp)
+		return true;
+	else if( s1->ideal - s1->nbvp == s2->ideal - s2->nbvp && s1->dist_barycentre_remorque < s2->dist_barycentre_remorque)
 		return true;
 	else
 		return false;
