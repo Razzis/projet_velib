@@ -78,6 +78,8 @@ public:
     GreedySolver(Instance* Instance);
     virtual ~GreedySolver();
     virtual bool solve();
+    bool Corrige_Greedy();
+    bool Corrige_Greedy_seconde_passe();
     Solution* solution;
     Solution* get_solution() {return this->solution;};
 };

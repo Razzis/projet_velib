@@ -1,6 +1,22 @@
 #include "voisinage.hpp"
 #include "solution.hpp"
 
+void move(Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
+
+	auto it1 = circuit1->stations->begin();
+    for (int i = 0; i < pos1; ++i) {
+        it1++;
+    }
+
+    Station* station1 = *it1;
+
+    cout << "move " << U::to_s(*station1) << " from " << U::to_s(*(circuit1->remorque)) << " to "
+    		<< U::to_s(*(circuit2->remorque)) << " in pos : " << pos2 << endl;
+
+	circuit2->insert(station1, pos2);
+	circuit1->stations->erase(it1);
+
+}
 
 void exchange(Solution* voisin,  Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 , int id_recuit) {
 	
@@ -23,6 +39,7 @@ void exchange(Solution* voisin,  Circuit* circuit1, Circuit* circuit2, int pos1,
 	
 	logn5("Voisin::exhange Insertion : TRY");
 	logn5("Voisin::exhange Insertion : TRY");
+
 
 	int old_desequilibre_c1 = circuit1->desequilibre;
 	int old_length_c1 = circuit1->length;

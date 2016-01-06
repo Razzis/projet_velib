@@ -1,4 +1,5 @@
 #include "solver.hpp"
+#include "voisinage.hpp"
 #include <map>
 #include <vector>
 
@@ -67,7 +68,7 @@ bool GreedySolver::solve() {
 		std::sort (station_list_pos->begin(), station_list_pos->end(), compare_station);
 
 		std::sort (station_list_neg->begin(), station_list_neg->end(), compare_station);
-		//std::reverse(station_list->begin(), station_list->end());
+		//std::reverse(station_list_neg->begin(), station_list_neg->end());
 
 		for(auto it = station_list_pos->begin(); it != station_list_pos->end(); ++it){
 			Station* station = *it;
@@ -158,51 +159,84 @@ bool GreedySolver::solve() {
 
     		logn7("greedy::solve Before attribution Circuit");
     		Circuit* circuit = (*circuit_list)[remorque_id];
-
     		// On ajoute la station dans un circuit temporaire
     		int insert_iterateur = -2;
+    		int insert_iterateur_neg;
+    		int insert_iterateur_pos;
     		int Cost_insert;
     		list<Station*>::iterator it_insert;
     		if (sinserter == "FRONT") {
     			Cost_insert = circuit->insertCost(station);
     		} else if (sinserter == "DOUBLE" || sinserter == "DOUBLE_MYINSERT") {
     			Cost_insert_neg = 999999999;
+    			Cost_insert_pos = 999999999;
+
+				/*while(station_list_pos->at(iterateur_pos)->deficit() > circuit->remorque->capa && remorque_index != tmp_sol.circuits->size()-1){
+					remorque_index++;
+					remorque_id = remorque_indexes[remorque_index];
+					circuit = (*circuit_list)[remorque_id];
+				}*/
     			/* pour chacun des deux vecteurs, si il lui reste des station, on calcul le cout engendré */
+				if(iterateur_pos < station_list_pos->size()){
+
+					if (sinserter == "DOUBLE"){
+						Cost_insert_pos = circuit->insertCost(station_list_pos->at(iterateur_pos), -1);
+						//if(abs(station_list_pos->at(iterateur_pos)->deficit()) > circuit->remorque->capa)
+						//		Cost_insert_pos += 1000000*abs(station_list_pos->at(iterateur_pos)->deficit()) - circuit->remorque->capa;
+						//Cost_insert_pos = (Cost_insert_pos-Cost_insert_pos%1000000)/1000000;
+					}
+					else{
+						Cost_insert_pos = circuit->my_insertTotalCost(station_list_pos->at(iterateur_pos), insert_iterateur_pos);
+					}
+
+
+
+				}
     			if(iterateur_neg < station_list_neg->size()){
     				if (sinserter == "DOUBLE"){
     					Cost_insert_neg = circuit->insertCost(station_list_neg->at(iterateur_neg), -1);
-    					Cost_insert_neg = (Cost_insert_neg-Cost_insert_neg%1000000)/1000000;
+						//if(abs(station_list_neg->at(iterateur_neg)->deficit()) > circuit->remorque->capa)
+						//		Cost_insert_neg += 1000000*abs(station_list_neg->at(iterateur_neg)->deficit()) - circuit->remorque->capa;
+    					//Station* Last_Station = *(circuit->stations->end());
+    					//cout << "circuit->charges_courante_min->end() : " << (*circuit->charges_courante_min)[Last_Station] << endl;
+    					//cout << " station_list_neg->at(iterateur_neg)->deficit() : " << station_list_neg->at(iterateur_neg)->deficit() << endl;
+    					//U::die("TEST");
+    					//if(iterateur > circuit->stations->size()/2 && Cost_insert_neg < 1000000 && (*circuit->charges_courante_min)[Last_Station] - station_list_neg->at(iterateur_neg)->deficit() < circuit->remorque->capa)
+    						//Cost_insert_neg = Cost_insert_neg/(((*circuit->charges_courante_min)[Last_Station] - station_list_neg->at(iterateur_neg)->deficit())*
+    					//			((*circuit->charges_courante_min)[Last_Station] - station_list_neg->at(iterateur_neg)->deficit()));
+    					//Cost_insert_neg = (Cost_insert_neg-Cost_insert_neg%1000000)/1000000;
     				}
     				else{
-    					Cost_insert_neg = circuit->my_insertTotalCost(station_list_neg->at(iterateur_neg), insert_iterateur);
+    					Cost_insert_neg = circuit->my_insertTotalCost(station_list_neg->at(iterateur_neg), insert_iterateur_neg);
     				}
 
-    			}
-    			Cost_insert_pos = 999999999;
-    			if(iterateur_pos < station_list_pos->size()){
-    				if (sinserter == "DOUBLE"){
-    					Cost_insert_pos = circuit->insertCost(station_list_pos->at(iterateur_pos), -1);
-    					Cost_insert_pos = (Cost_insert_pos-Cost_insert_pos%1000000)/1000000;
-    				}
-    				else{
-    					Cost_insert_pos = circuit->my_insertTotalCost(station_list_pos->at(iterateur_pos), insert_iterateur);
-    				}
+					/*while(station_list_pos->at(iterateur_pos)->deficit() > circuit->remorque->capa && remorque_index != tmp_sol.circuits->size()-1){
+						Cost_insert_neg += 10000000;
+						remorque_index++;
+						remorque_id = remorque_indexes[remorque_index];
+						circuit = (*circuit_list)[remorque_id];
+						Cost_insert_pos = circuit->insertCost(station_list_pos->at(iterateur_pos), -1);
+					}*/
+
 
     			}
-    			/*cout << "iterateur pos : " << iterateur_pos << endl;
-				cout << "iterateur neg : " << iterateur_neg << endl;
-				cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
-				cout << "Cost_insert_pos : " << Cost_insert_pos << endl;
-				cout << "Cost_insert_neg : " << Cost_insert_neg << endl;*/
+
+    			//cout << "iterateur pos : " << iterateur_pos << endl;
+				//cout << "iterateur neg : " << iterateur_neg << endl;
+				//cout <<"#neg "<< U::to_s(*(station_list_pos->at(iterateur_pos))) << endl;
+				//cout << "Cost_insert_pos : " << Cost_insert_pos << endl;
+				//cout << "Cost_insert_neg : " << Cost_insert_neg << endl;
 
     			//On choisis le meilleurs des deux couts
     			if((Cost_insert_pos > Cost_insert_neg || iterateur_pos == station_list_pos->size())&& iterateur_neg < station_list_neg->size()){
     				Cost_insert = Cost_insert_neg;
+    				insert_iterateur = insert_iterateur_neg;
     				station = (station_list_neg->at(iterateur_neg));
     			}
     			else if(Cost_insert_pos <= Cost_insert_neg && iterateur_pos < station_list_pos->size()){
 
     				Cost_insert = Cost_insert_pos;
+    				insert_iterateur = insert_iterateur_pos;
     				//cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
     				station = (station_list_pos->at(iterateur_pos));
     				//cout <<"#neg "<< U::to_s(*(station_list_neg->at(iterateur_neg))) << endl;
@@ -261,19 +295,7 @@ bool GreedySolver::solve() {
 
 
 
-			#ifdef VERIF_CIRCUIT_NON_VIDE
-    		/* il faut s'assurer que les circuits ne sortent pas vide,
-    		 * donc tant que tout les remplis, ne rempli que les circuit vide
-    		 */
-			if(circuit->desequilibre < deficit_min && (all_circuit_non_vide || !circuit_non_vide.at(remorque_id))){
-				best_id = remorque_id;
-				deficit_min = circuit->desequilibre;
-				if (sinserter == "MYINSERT") {
-					Best_iterateur = insert_interateur;
-				}
 
-			}
-			#endif
 
 			#ifndef VERIF_CIRCUIT_NON_VIDE
 
@@ -288,7 +310,7 @@ bool GreedySolver::solve() {
 						pos_deficit_choosed = false;
 				}
 				Best_Cost = Cost_insert;
-				if (sinserter == "MYINSERT") {
+				if (sinserter == "MYINSERT" || sinserter == "DOUBLE_MYINSERT"  ) {
 					Best_iterateur = insert_iterateur;
 				}
 
@@ -406,10 +428,221 @@ bool GreedySolver::solve() {
 
     logn5("Circuit::greedy fin solve, before update");
     this->solution->update();
+    while(this->Corrige_Greedy())
+    	cout << "coorige" << endl;
+    while(this->Corrige_Greedy_seconde_passe())
+    	cout << "coorige2" << endl;
+
+
+    this->solution->update();
     this->found = true;
     delete station_list_pos;
     delete station_list_neg;
     return found;
 }
+
+bool GreedySolver::Corrige_Greedy(){
+	int old_desequilibre = this->solution->desequilibre;
+    bool heuristique_possible = false;
+
+    if(this->solution->desequilibre > 0){//on ne retraite que si le dessequilibre est non nul
+    	for(auto it = this->solution->circuits->begin(); it != this->solution->circuits->end(); ++it){//on cherche un circuit de desequilibre non nul
+    		Circuit* current_circuit = *it;
+    		Station* Last_station = *(--current_circuit->stations->end());
+    		/*for(auto it3 = current_circuit->stations->begin(); it3 != current_circuit->stations->end(); ++it3){
+    			Last_station = *it3;//Dernière station du circuit (On espère que c'est elle qui engendre le déficit)
+    			if((*current_circuit->desequilibre_courant)[Last_station] != 0)
+    				break;
+    		}*/
+    		//cout << "Last_station : " << U::to_s(*Last_station) << " def : " << (*current_circuit->desequilibre_courant)[Last_station] << endl;
+    		if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
+    			heuristique_possible = true;
+    			if(abs(Last_station->deficit()) > current_circuit->remorque->capa){//il faut au moins que la remorque ait la taille pour absorber le deficit
+    				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
+    					Circuit* circuit = *it2;
+    					if(circuit->remorque->capa >= abs(Last_station->deficit())){
+							move(current_circuit, circuit,
+									current_circuit->stations->size()-1, -1);
+
+							current_circuit->update();
+
+    					}
+    				}
+    			}
+    		}
+    		else if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
+    			heuristique_possible = true;
+    			if(abs(Last_station->deficit()) > current_circuit->remorque->capa){//il faut au moins que la remorque ait la taille pour absorber le deficit
+    				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
+    					Circuit* circuit = *it2;
+    					if(circuit->remorque->capa >= abs(Last_station->deficit())){
+							move(current_circuit, circuit,
+									current_circuit->stations->size()-1, -1);
+
+							current_circuit->update();
+
+    					}
+    				}
+    			}
+    		}
+    	}
+    }
+
+    this->solution->update();
+
+    if(heuristique_possible){
+    	heuristique_possible = false;
+    	for(auto it = this->solution->circuits->begin(); it != this->solution->circuits->end(); ++it){//on parcours les remorques pour chercher celle dont la dernière stations est desequilibrée
+    		Circuit* current_circuit = *it;
+    		Station* Last_station = *(--current_circuit->stations->end());
+    		Circuit* current_circuit_charges;
+
+    		if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){
+
+    			bool charge_courante_positive_finded = true;
+
+
+    			while(charge_courante_positive_finded && this->solution->desequilibre > 0){//tant qu'il reste des stations à deplacer et du desequilibre a traiter
+    				charge_courante_positive_finded = false;
+
+					for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){//on parcours les circuits à la recherche des circuit dont la charge final est non nul
+						current_circuit_charges = *it2;
+
+						if(U::to_s(*(current_circuit_charges->remorque)) != U::to_s(*(current_circuit->remorque))){//on evite de voiloir inserer-desinserer dans la meme stations
+							// = *(--current_circuit_charges->stations->end());
+							int deficit;
+							int desequilibre_courant;
+							for(auto it3 = current_circuit_charges->stations->begin(); it3 != current_circuit_charges->stations->end(); ++it3){
+								Station*  Last_station_charge = *(it3);
+								deficit = Last_station_charge->deficit();
+								desequilibre_courant = (*current_circuit_charges->desequilibre_courant)[Last_station_charge];
+							}
+							//cout << "Last_station_charge : " << U::to_s(*Last_station_charge) << endl;
+							//cout << "Last_station : " << U::to_s(*Last_station) << endl;
+							//cout << "current_circuit : " << U::to_s(*(current_circuit->remorque)) << endl;
+							//cout << "current_circuit_charges : " << U::to_s(*(current_circuit_charges->remorque)) << endl;
+							//cout << "(*current_circuit_charges->charges_courante_min)[Last_station_charge] : " << (*current_circuit_charges->charges_courante_min)[Last_station_charge] << endl;
+							//cout << "deficit_absorbe : " << deficit_absorbe << endl;
+							//deficit_absorbe < (*current_circuit->charges_courante_min)[Last_station]
+							cout << "ok1" << endl;
+							if((*current_circuit->desequilibre_courant)[Last_station] != 0
+									&& deficit <= 0
+									&& desequilibre_courant == 0){
+								charge_courante_positive_finded = true;
+								cout << "ok" << endl;
+								move(current_circuit_charges, current_circuit,
+										current_circuit_charges->stations->size()-1, current_circuit->stations->size()-1);
+								cout << "ko" << endl;
+								this->solution->update();
+
+							}
+						}
+					}
+    			}
+    		}
+
+
+    		else if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){
+
+    			bool charge_courante_positive_finded = true;
+
+
+    			while(charge_courante_positive_finded && this->solution->desequilibre > 0){//tant qu'il reste des stations à deplacer et du desequilibre a traiter
+    				charge_courante_positive_finded = false;
+
+					for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){//on parcours les circuits à la recherche des circuit dont la charge final est non nul
+						current_circuit_charges = *it2;
+
+						if(U::to_s(*(current_circuit_charges->remorque)) != U::to_s(*(current_circuit->remorque))){//on evite de voiloir inserer-desinserer dans la meme stations
+
+							int deficit;
+							int desequilibre_courant;
+							for(auto it3 = current_circuit_charges->stations->begin(); it3 != current_circuit_charges->stations->end(); ++it3){
+								Station* Last_station_charge = *(it3);
+								deficit = Last_station_charge->deficit();
+								desequilibre_courant = (*current_circuit_charges->desequilibre_courant)[Last_station_charge];
+							}
+							//cout << "Last_station_charge : " << U::to_s(*Last_station_charge) << endl;
+							//cout << "Last_station5 : " << U::to_s(*Last_station) << endl;
+							//cout << "current_circuit : " << U::to_s(*(current_circuit->remorque)) << endl;
+							//cout << "current_circuit_charges : " << U::to_s(*(current_circuit_charges->remorque)) << endl;
+							//cout << "(*current_circuit_charges->charges_courante_min)[Last_station_charge] : " << (*current_circuit_charges->charges_courante_min)[Last_station_charge] << endl;
+							if((*current_circuit->desequilibre_courant)[Last_station] != 0//on a pas tout réparé
+									&& deficit >= 0
+									&& desequilibre_courant == 0){
+								charge_courante_positive_finded = true;
+
+								move(current_circuit_charges, current_circuit,
+										current_circuit_charges->stations->size()-1, current_circuit->stations->size()-1);
+
+								this->solution->update();
+
+							}
+						}
+					}
+    			}
+    		}
+
+
+    	}
+    }
+    if (old_desequilibre != this->solution->desequilibre)
+    	return true;
+    else
+    	return false;
+}
+
+
+
+bool GreedySolver::Corrige_Greedy_seconde_passe(){
+	int old_desequilibre = this->solution->desequilibre;
+    bool heuristique_possible = false;
+
+    if(this->solution->desequilibre > 0){//on ne retraite que si le dessequilibre est non nul
+    	for(auto it = this->solution->circuits->begin(); it != this->solution->circuits->end(); ++it){//on cherche un circuit de desequilibre non nul
+    		Circuit* current_circuit = *it;
+    		Station* Last_station;
+    		int iterateur_last_station = 0;
+    		for(auto it3 = current_circuit->stations->begin(); it3 != current_circuit->stations->end(); ++it3){
+    			Last_station = *it3;//Dernière station du circuit (On espère que c'est elle qui engendre le déficit)
+    			if((*current_circuit->desequilibre_courant)[Last_station] != 0)
+    				break;
+    			iterateur_last_station++;
+    		}
+    		//cout << "Last_station : " << U::to_s(*Last_station) << " def : " << (*current_circuit->desequilibre_courant)[Last_station] << endl;
+    		if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
+    			heuristique_possible = true;
+
+    			int desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
+    			for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){
+    				Circuit* circuit = *it2;
+    				bool break_seconde_boucle = false;
+    				int iterateur_station_to_move = 0;
+    				for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
+    					Station* station = *it3;
+    					if(station->deficit() == -desequilibre_a_corriger){
+    						move(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
+    						break_seconde_boucle = true;
+    						break;
+    					}
+    					iterateur_station_to_move++;
+    				}
+    				if(break_seconde_boucle)
+    					break;
+    			}
+
+    		}
+    	}
+    }
+
+    this->solution->update();
+    if (old_desequilibre != this->solution->desequilibre)
+    	return true;
+    else
+    	return false;
+}
+
+
+
 
 //./
