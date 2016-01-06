@@ -5,6 +5,10 @@
 void exchange( Solution* solution, Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
 	// rq : on passe le solution en arg pour faire des partial update plus rapide, sinon pas beosin
 
+    int old_desequilibre_c1 = circuit1->desequilibre;
+    int old_length_c1 = circuit1->length;
+    int old_desequilibre_c2 = circuit2->desequilibre;
+    int old_length_c2 = circuit2->length;
 
 	auto it1 = circuit1->stations->begin();
     for (int i = 0; i < pos1; ++i) {
@@ -15,10 +19,7 @@ void exchange( Solution* solution, Circuit* circuit1, Circuit* circuit2, int pos
         it2++;
     }
 
-    int old_desequilibre_c1 = circuit1->desequilibre;
-    int old_length_c1 = circuit1->length;
-    int old_desequilibre_c2 = circuit2->desequilibre;
-    int old_length_c2 = circuit2->length;
+
 
 	Station* station1 = *it1;
 	Station* station2 = *it2;
@@ -41,9 +42,9 @@ void exchange( Solution* solution, Circuit* circuit1, Circuit* circuit2, int pos
 
 
 void take( Solution* solution, Circuit* circuit1, int pos1, int pos2, Circuit* circuit2, int pos3 ) {
+
 	int old_desequilibre_c1 = circuit1->desequilibre;
 	int old_length_c1 = circuit1->length;
-
 	int old_desequilibre_c2 = circuit2->desequilibre;
 	int old_length_c2 = circuit2->length;
 
@@ -64,12 +65,12 @@ void take( Solution* solution, Circuit* circuit1, int pos1, int pos2, Circuit* c
 
 	solution->Partial_update(circuit1,circuit2,old_desequilibre_c1,old_length_c1,old_desequilibre_c2,old_length_c2);
 
-
 }
 
 
 
 void move( Solution* solution, Circuit* circuit, int pos1, int pos2, int pos3 ) {
+
 	int old_desequilibre = circuit->desequilibre;
 	int old_length = circuit->length;
 
@@ -101,6 +102,7 @@ void move( Solution* solution, Circuit* circuit, int pos1, int pos2, int pos3 ) 
 
 
 void reverse( Solution* solution, Circuit* circuit, int pos1, int pos2 ) {
+
 	int old_desequilibre = circuit->desequilibre;
 	int old_length = circuit->length;
 
@@ -116,8 +118,8 @@ void reverse( Solution* solution, Circuit* circuit, int pos1, int pos2 ) {
 		auto it1 = (it2--)++;
 		circuit->stations->erase(it1);
 	}
-    solution->Partial_update(circuit,old_desequilibre,old_length);
 
+    solution->Partial_update(circuit,old_desequilibre,old_length);
 }
 
 
@@ -145,14 +147,15 @@ Solution* select_voisin( Solution* solution, Solution* voisin ) {
 		compute_proba_circuit(circuit2, proba2);
 
 		// selection des stations via leur position
+		int pos3 = select_station(circuit2, proba2);
 		int pos1 = select_station(circuit1, proba1);
 		int pos2 = select_station(circuit1, proba1);
-		int pos3 = select_station(circuit2, proba2);
+		
 
 		// take
 		take( voisin, circuit1, pos1, pos2, circuit2, pos3 );
-	
-	} else if (circuit_id1 == circuit_id2) {
+
+		} else if (circuit_id1 == circuit_id2) {
 		// si on a tir� 2 fois le m�me circuit, on peut soit d�placer des stations, soit retourner une seq de stations
 		// ie faire un move ou un reverse
 
@@ -244,7 +247,7 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
 		  		c = *rq;
 		  		if (a!=here) {
 		  			min_dist = min(min_dist, circuit->inst->get_dist(here,a)+circuit->inst->get_dist(here,c));
-		  			min_dist = min(min_dist, circuit->inst->get_dist(here,c)+circuit->inst->get_dist(here,c));
+		  			//min_dist = min(min_dist, circuit->inst->get_dist(here,c)+circuit->inst->get_dist(here,c));
 		  		}
 		  	}
 		}
@@ -256,13 +259,12 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
 
 
 
-	// ce bout de caca ci est aussi trop lourd sur les grosses instances, mais lui il doit être recalculé ici à chaque fois...
+	// ce bout de caca ci est aussi trop lourd sur les grosses instances, mais lui il doit �tre recalcul� ici � chaque fois...
 	Station* src = *circuit->stations->begin();
 	auto st = circuit->stations->begin();
 
 	proba[src] = circuit->inst->get_dist(circuit->remorque, src) + proba[src];
 	sum_proba = sum_proba + circuit->inst->get_dist(circuit->remorque,src);
-
     while (src != circuit->stations->back() && circuit->stations->size()!=1) {
     	st++;
         Station* dst = *st;
@@ -288,7 +290,7 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
 
 
 
-int select_station( Circuit* circuit, map<Station*,double> proba) {
+int select_station( Circuit* circuit, map<Station*,double> &proba) {
 	double p = double(rand())/double(RAND_MAX);
 	int pos = 0;
 	double sum_proba = 0.0;
@@ -298,6 +300,7 @@ int select_station( Circuit* circuit, map<Station*,double> proba) {
 		st++;
 		pos++;
 	}
+
 	return pos;
 }
 

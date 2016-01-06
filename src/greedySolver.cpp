@@ -180,9 +180,11 @@ bool GreedySolver::solve() {
 				if(iterateur_pos < station_list_pos->size()){
 
 					if (sinserter == "DOUBLE"){
+
 						Cost_insert_pos = circuit->insertCost(station_list_pos->at(iterateur_pos), -1);
-						//if(abs(station_list_pos->at(iterateur_pos)->deficit()) > circuit->remorque->capa)
-						//		Cost_insert_pos += 1000000*abs(station_list_pos->at(iterateur_pos)->deficit()) - circuit->remorque->capa;
+
+						if(abs(station_list_pos->at(iterateur_pos)->deficit()) > circuit->remorque->capa)
+								Cost_insert_pos = 999999998;//10000000*(abs(station_list_pos->at(iterateur_pos)->deficit()) - circuit->remorque->capa);
 						//Cost_insert_pos = (Cost_insert_pos-Cost_insert_pos%1000000)/1000000;
 					}
 					else{
@@ -194,9 +196,11 @@ bool GreedySolver::solve() {
 				}
     			if(iterateur_neg < station_list_neg->size()){
     				if (sinserter == "DOUBLE"){
+
     					Cost_insert_neg = circuit->insertCost(station_list_neg->at(iterateur_neg), -1);
-						//if(abs(station_list_neg->at(iterateur_neg)->deficit()) > circuit->remorque->capa)
-						//		Cost_insert_neg += 1000000*abs(station_list_neg->at(iterateur_neg)->deficit()) - circuit->remorque->capa;
+
+						if(abs(station_list_neg->at(iterateur_neg)->deficit()) > circuit->remorque->capa)
+								Cost_insert_neg = 999999998;//10000000*(abs(station_list_neg->at(iterateur_neg)->deficit()) - circuit->remorque->capa);
     					//Station* Last_Station = *(circuit->stations->end());
     					//cout << "circuit->charges_courante_min->end() : " << (*circuit->charges_courante_min)[Last_Station] << endl;
     					//cout << " station_list_neg->at(iterateur_neg)->deficit() : " << station_list_neg->at(iterateur_neg)->deficit() << endl;
@@ -361,10 +365,14 @@ bool GreedySolver::solve() {
 
 
 		if(sinserter == "DOUBLE" || sinserter == "DOUBLE_MYINSERT") {
-			if(pos_deficit_choosed)//on recupère la station concerné
+			if(pos_deficit_choosed){//on recupère la station concerné
 				station = (station_list_pos->at(iterateur_pos));
-			else
+				cout << "station choosed pos : " << U::to_s(*station) << endl;
+			}
+			else{
 				station = (station_list_neg->at(iterateur_neg));
+				cout << "station choosed pos : " << U::to_s(*station) << endl;
+			}
 		}
 
 		// On ajoute la station au circuit choisis
@@ -527,7 +535,8 @@ bool GreedySolver::Corrige_Greedy(){
 							cout << "ok1" << endl;
 							if((*current_circuit->desequilibre_courant)[Last_station] != 0
 									&& deficit <= 0
-									&& desequilibre_courant == 0){
+									&& desequilibre_courant == 0
+									&& abs(Last_station->deficit()) <= current_circuit_charges->remorque->capa){
 								charge_courante_positive_finded = true;
 								cout << "ok" << endl;
 								move_glouton(current_circuit_charges, current_circuit,
@@ -621,7 +630,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
     			iterateur_last_station++;
     		}
     		//cout << "Last_station : " << U::to_s(*Last_station) << " def : " << (*current_circuit->desequilibre_courant)[Last_station] << endl;
-    		if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
+    		if(Last_station->deficit() <= current_circuit->remorque->capa && current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
     			heuristique_possible = true;
 
     			int desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
@@ -634,7 +643,10 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 						int iterateur_station_to_move = 0;
 						for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
 							Station* station = *it3;
-							if(station->deficit() == -desequilibre_a_corriger){
+							if(station->deficit() <= -desequilibre_a_corriger+1//+1 psq a priori il y a au moins la place de placer le deficit, et vu qu'on a un deficit courante, la charge avant la station est au moins de 1
+									&& station->deficit() >= 0
+									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
+								desequilibre_a_corriger += station->deficit();
 								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
 								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
 								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
@@ -652,7 +664,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
     			}
 
     		}
-    		/*else if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
+    		else if(Last_station->deficit() <= current_circuit->remorque->capa && current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
     			heuristique_possible = true;
 
     			int desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
@@ -665,8 +677,10 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 						int iterateur_station_to_move = 0;
 						for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
 							Station* station = *it3;
-							if(station->deficit() == -desequilibre_a_corriger
+							if(-station->deficit() <= desequilibre_a_corriger
+									&& station->deficit() <= 0
 									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
+								desequilibre_a_corriger -= -station->deficit();
 								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
 								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
 								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
@@ -683,7 +697,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 					desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
     			}
 
-    		}*/
+    		}
 
 
 
