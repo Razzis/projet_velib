@@ -605,8 +605,19 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
     		int iterateur_last_station = 0;
     		for(auto it3 = current_circuit->stations->begin(); it3 != current_circuit->stations->end(); ++it3){
     			Last_station = *it3;//Dernière station du circuit (On espère que c'est elle qui engendre le déficit)
-    			if((*current_circuit->desequilibre_courant)[Last_station] != 0)
+
+    			int deficit = Last_station->deficit();
+				int desequilibre_courant = (*current_circuit->desequilibre_courant)[Last_station];
+				int id = Last_station->id;
+
+				/*for(auto it4 = current_circuit->stations->begin(); it4 != current_circuit->stations->end(); ++it4){
+					Station*  Last_station = *(it4);
+					deficit
+					desequilibre_courant;
+				}*/
+    			if(desequilibre_courant != 0){
     				break;
+    			}
     			iterateur_last_station++;
     		}
     		//cout << "Last_station : " << U::to_s(*Last_station) << " def : " << (*current_circuit->desequilibre_courant)[Last_station] << endl;
@@ -614,24 +625,73 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
     			heuristique_possible = true;
 
     			int desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
-    			for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){
-    				Circuit* circuit = *it2;
-    				bool break_seconde_boucle = false;
-    				int iterateur_station_to_move = 0;
-    				for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
-    					Station* station = *it3;
-    					if(station->deficit() == -desequilibre_a_corriger){
-    						move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
-    						break_seconde_boucle = true;
-    						break;
-    					}
-    					iterateur_station_to_move++;
-    				}
-    				if(break_seconde_boucle)
-    					break;
+    			bool continue_corection=true;
+    			while(continue_corection && desequilibre_a_corriger!=0){//on continue tant qu'il y a encore à corriger et qu'on y arrive encore
+    				continue_corection = false;
+					for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){
+						Circuit* circuit = *it2;
+						bool break_seconde_boucle = false;
+						int iterateur_station_to_move = 0;
+						for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
+							Station* station = *it3;
+							if(station->deficit() == -desequilibre_a_corriger){
+								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
+								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
+								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
+								break_seconde_boucle = true;
+								continue_corection = true;
+								break;
+							}
+							iterateur_station_to_move++;
+						}
+						if(break_seconde_boucle)
+							break;
+					}
+					this->solution->update();
+					desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
     			}
 
     		}
+    		/*else if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
+    			heuristique_possible = true;
+
+    			int desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
+    			bool continue_corection=true;
+    			while(continue_corection && desequilibre_a_corriger!=0){//on continue tant qu'il y a encore à corriger et qu'on y arrive encore
+    				continue_corection = false;
+					for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){
+						Circuit* circuit = *it2;
+						bool break_seconde_boucle = false;
+						int iterateur_station_to_move = 0;
+						for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
+							Station* station = *it3;
+							if(station->deficit() == -desequilibre_a_corriger
+									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
+								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
+								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
+								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
+								break_seconde_boucle = true;
+								continue_corection = true;
+								break;
+							}
+							iterateur_station_to_move++;
+						}
+						if(break_seconde_boucle)
+							break;
+					}
+					this->solution->update();
+					desequilibre_a_corriger = (*current_circuit->desequilibre_courant)[Last_station];
+    			}
+
+    		}*/
+
+
+
+
+
+
+
+
     	}
     }
 
@@ -656,6 +716,7 @@ void move_glouton(Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
     		<< U::to_s(*(circuit2->remorque)) << " in pos : " << pos2 << endl;
 
 	circuit2->insert(station1, pos2);
+
 	circuit1->stations->erase(it1);
 
 }

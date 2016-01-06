@@ -145,8 +145,8 @@ void Solution::Partial_update(Circuit* c1, Circuit* c2, int old_desequilibre_c1,
            U::to_s(this->length));
     logn4("Solution::update END");
     if(this->length < 0 || this->desequilibre < 0){
-    	cout << c1 << endl;
-    	cout << c2 << endl;
+    	cout << *c1 << endl;
+    	cout << *c2 << endl;
     	cout << "length : " << this->length;
     	cout << "desequilibre : " << this->desequilibre;
     	U::die("Solution::Partial_update(c1,c2)");

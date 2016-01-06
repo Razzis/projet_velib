@@ -90,7 +90,7 @@ public:
     virtual ~AnnealingSolver();
     virtual bool solve();
 	virtual Solution* apply_one_greedy(Solution* currentsol);
-	virtual Solution* apply_one_recuit(Solution* sol, double T0, double coeff_maj_T0, double nb_explo_voisin, int nb_iteratrion_max);
+	virtual Solution* recuit(Solution* solution, double T0, double prog_geo_T, int max_prop, int itermax, double TAU_MIN);
     Solution* get_solution() {return this->solution;};
 };
 
