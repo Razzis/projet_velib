@@ -435,10 +435,14 @@ bool GreedySolver::solve() {
 
     logn5("Circuit::greedy fin solve, before update");
     this->solution->update();
-    while(this->Corrige_Greedy())
-    	cout << "coorige" << endl;
-    while(this->Corrige_Greedy_seconde_passe())
-    	cout << "coorige2" << endl;
+    while(this->Corrige_Greedy()){
+    	logn5("Corrige_greedy");
+    }
+
+    while(this->Corrige_Greedy_seconde_passe()){
+    	logn5("Seconde passe de correction");
+    }
+
 
 
     this->solution->update();
@@ -462,7 +466,7 @@ bool GreedySolver::Corrige_Greedy(){
     				break;
     		}*/
     		//cout << "Last_station : " << U::to_s(*Last_station) << " def : " << (*current_circuit->desequilibre_courant)[Last_station] << endl;
-    		if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
+    		if(current_circuit->stations->size() > 1 && current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] > 0){//pour l'instant on ne traite que les deficit > 0
     			heuristique_possible = true;
     			if(abs(Last_station->deficit()) > current_circuit->remorque->capa){//il faut au moins que la remorque ait la taille pour absorber le deficit
     				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
@@ -477,7 +481,7 @@ bool GreedySolver::Corrige_Greedy(){
     				}
     			}
     		}
-    		else if(current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
+    		else if(current_circuit->stations->size() > 1 && current_circuit->desequilibre > 0 && (*current_circuit->desequilibre_courant)[Last_station] < 0){//pour l'instant on ne traite que les deficit > 0
     			heuristique_possible = true;
     			if(abs(Last_station->deficit()) > current_circuit->remorque->capa){//il faut au moins que la remorque ait la taille pour absorber le deficit
     				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
@@ -531,16 +535,17 @@ bool GreedySolver::Corrige_Greedy(){
 							//cout << "(*current_circuit_charges->charges_courante_min)[Last_station_charge] : " << (*current_circuit_charges->charges_courante_min)[Last_station_charge] << endl;
 							//cout << "deficit_absorbe : " << deficit_absorbe << endl;
 							//deficit_absorbe < (*current_circuit->charges_courante_min)[Last_station]
-							cout << "ok1" << endl;
+
 							if((*current_circuit->desequilibre_courant)[Last_station] != 0
 									&& deficit <= 0
 									&& desequilibre_courant == 0
+									&& current_circuit_charges->stations->size() > 1
 									&& abs(Last_station->deficit()) <= current_circuit_charges->remorque->capa){
 								charge_courante_positive_finded = true;
-								cout << "ok" << endl;
+
 								move_glouton(current_circuit_charges, current_circuit,
 										current_circuit_charges->stations->size()-1, current_circuit->stations->size()-1);
-								cout << "ko" << endl;
+
 								this->solution->update();
 
 							}
@@ -577,7 +582,8 @@ bool GreedySolver::Corrige_Greedy(){
 							//cout << "(*current_circuit_charges->charges_courante_min)[Last_station_charge] : " << (*current_circuit_charges->charges_courante_min)[Last_station_charge] << endl;
 							if((*current_circuit->desequilibre_courant)[Last_station] != 0//on a pas tout réparé
 									&& deficit >= 0
-									&& desequilibre_courant == 0){
+									&& desequilibre_courant == 0
+									&& current_circuit_charges->stations->size() > 1){
 								charge_courante_positive_finded = true;
 
 								move_glouton(current_circuit_charges, current_circuit,
@@ -644,6 +650,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 							Station* station = *it3;
 							if(station->deficit() <= -desequilibre_a_corriger+1//+1 psq a priori il y a au moins la place de placer le deficit, et vu qu'on a un deficit courante, la charge avant la station est au moins de 1
 									&& station->deficit() >= 0
+									&& circuit->stations->size() > 1
 									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
 								desequilibre_a_corriger += station->deficit();
 								//cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
@@ -678,6 +685,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 							Station* station = *it3;
 							if(-station->deficit() <= desequilibre_a_corriger
 									&& station->deficit() <= 0
+									&& circuit->stations->size() > 1
 									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
 								desequilibre_a_corriger -= -station->deficit();
 								//cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;

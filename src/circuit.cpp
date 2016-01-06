@@ -229,7 +229,7 @@ void Circuit::equilibrate() {
         		logn5("Circuit::equilibrate charge_init_min : " + U::to_s(charge_init_min));
         	}
         	if(charge_init_max < 0)
-        		logn2("\n Circuit::equilibrate : charge init max <0 : " + U::to_s(charge_init_max));
+        		logn5("\n Circuit::equilibrate : charge init max <0 : " + U::to_s(charge_init_max));
 
         	if(charge_courante_min >= station->deficit() && !charge_init_finded){
         		charge_courante_max -= station->deficit();
@@ -246,11 +246,11 @@ void Circuit::equilibrate() {
         	    charge_courante_min = 0;
         	}
         	/*else{
-        		logn2("\n charge_courante_min : " + U::to_s(charge_courante_min) + "charge_courante_max : " + U::to_s(charge_courante_max));
+        		logn5("\n charge_courante_min : " + U::to_s(charge_courante_min) + "charge_courante_max : " + U::to_s(charge_courante_max));
         		U::die("Circuit::equilibrate : bug sur l'équilibrage2");
         	}*/
         	if(charge_init_max < 0)
-        		logn2("\n Circuit::equilibrate : charge init max <0 : " + U::to_s(charge_init_max));
+        		logn5("\n Circuit::equilibrate : charge init max <0 : " + U::to_s(charge_init_max));
         	charge_init = charge_init_max;//si charge_init_finded == true, max=min, sinon on a le choix
         	if(charge_init_max < 0)
         		U::die("\n Circuit::equilibrate : charge init max <0 : " + U::to_s(charge_init_max));
@@ -317,13 +317,13 @@ int Circuit::Partial_equilibrate(Station* s, list<Station*>::iterator insert_it,
 
 	if(insert_it != this->stations->end()){
 		++it;
-		logn2("Circuit::partial_equilibrate MAJ it avant la boucle");
+		logn5("Circuit::partial_equilibrate MAJ it avant la boucle");
 	}
 	else
 		arret_boucle = true;
 
 	bool first_iteration = true;
-	logn2("Circuit::Partial_Equilibrate début de la boucle");
+	logn5("Circuit::Partial_Equilibrate début de la boucle");
 	while(!arret_boucle || first_iteration){
 		Station* station;
 		if(first_iteration)
@@ -336,19 +336,19 @@ int Circuit::Partial_equilibrate(Station* s, list<Station*>::iterator insert_it,
 		}
 
 		if(station->deficit() > 0){
-			logn2("Circuit::Partial_Equilibrate deficit positif de la station "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
+			logn5("Circuit::Partial_Equilibrate deficit positif de la station "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
 			if(charge_courante_min > station->deficit()){
-				logn2("Circuit::Partial_Equilibrate charge_courante_min > station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
+				logn5("Circuit::Partial_Equilibrate charge_courante_min > station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
 				charge_courante_min -= station->deficit();
 				charge_courante_max -= station->deficit();
 			}
 			else{
-				logn2("Circuit::Partial_Equilibrate charge_courante_min <= station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
+				logn5("Circuit::Partial_Equilibrate charge_courante_min <= station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
 				charge_init_min += station->deficit()-charge_courante_min;
 				charge_courante_max -= station->deficit();
 				charge_courante_min = 0;
 				if(charge_init_max <= charge_init_min){
-					logn2("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
+					logn5("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
 							+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
 					if(first_iteration)
 						stationAddedAsFirstOF2Part = true;
@@ -374,19 +374,19 @@ int Circuit::Partial_equilibrate(Station* s, list<Station*>::iterator insert_it,
 			}
 		}
 		if(station->deficit() < 0){
-			logn2("Circuit::Partial_Equilibrate deficit négatif "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
+			logn5("Circuit::Partial_Equilibrate deficit négatif "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
 			if(this->remorque->capa - charge_courante_max > -station->deficit()){
-				logn2("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max > -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
+				logn5("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max > -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
 				charge_courante_max += -station->deficit();
 				charge_courante_min += -station->deficit();
 			}
 			else{
-				logn2("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max <= -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
+				logn5("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max <= -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
 				charge_init_max -= -station->deficit() - (this->remorque->capa - charge_courante_max);
 				charge_courante_min += -station->deficit();
 				charge_courante_max = this->remorque->capa;
 				if(charge_init_max <= charge_init_min){
-					logn2("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
+					logn5("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
 							+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
 					if(first_iteration)
 						stationAddedAsFirstOF2Part = true;
@@ -411,16 +411,16 @@ int Circuit::Partial_equilibrate(Station* s, list<Station*>::iterator insert_it,
 				}
 			}
 		}
-		logn2("Circuit::Partial_Equilibrate (charge_courante_min,charge_courante_max) : "
+		logn5("Circuit::Partial_Equilibrate (charge_courante_min,charge_courante_max) : "
 									+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
-		logn2("Circuit::Partial_Equilibrate (charge_init_min,charge_init_max) : "
+		logn5("Circuit::Partial_Equilibrate (charge_init_min,charge_init_max) : "
 									+U::to_s(charge_init_min)+","+U::to_s(charge_init_max)+")");
 		//cout << "Stations : " << U::to_s(*station) << endl;
 		//cout << *this << endl;
 		if(first_iteration)
 			first_iteration = false;
 		else{
-			logn2("Circuit::Partial_equilibre iterator increase");
+			logn5("Circuit::Partial_equilibre iterator increase");
 			it++;
 		}
 		if(it == this->stations->end())
@@ -457,7 +457,7 @@ int Circuit::Partial_equilibrate_First_Station(Station* s, list<Station*>::itera
 
 
 	bool first_iteration = true;
-	logn2("Circuit::Partial_Equilibrate début de la boucle");
+	logn5("Circuit::Partial_Equilibrate début de la boucle");
 	while(!arret_boucle || first_iteration){
 		Station* station;
 		if(first_iteration)
@@ -470,19 +470,19 @@ int Circuit::Partial_equilibrate_First_Station(Station* s, list<Station*>::itera
 		}
 
 		if(station->deficit() > 0){
-			logn2("Circuit::Partial_Equilibrate deficit positif de la station "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
+			logn5("Circuit::Partial_Equilibrate deficit positif de la station "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
 			if(charge_courante_min > station->deficit()){
-				logn2("Circuit::Partial_Equilibrate charge_courante_min > station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
+				logn5("Circuit::Partial_Equilibrate charge_courante_min > station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
 				charge_courante_min -= station->deficit();
 				charge_courante_max -= station->deficit();
 			}
 			else{
-				logn2("Circuit::Partial_Equilibrate charge_courante_min <= station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
+				logn5("Circuit::Partial_Equilibrate charge_courante_min <= station->deficit() charge_courante_min : "+U::to_s(charge_courante_min));
 				charge_init_min += station->deficit()-charge_courante_min;
 				charge_courante_max -= station->deficit();
 				charge_courante_min = 0;
 				if(charge_init_max <= charge_init_min){
-					logn2("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
+					logn5("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
 							+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
 					if(first_iteration)
 						stationAddedAsFirstOF2Part = true;
@@ -508,19 +508,19 @@ int Circuit::Partial_equilibrate_First_Station(Station* s, list<Station*>::itera
 			}
 		}
 		if(station->deficit() < 0){
-			logn2("Circuit::Partial_Equilibrate deficit négatif "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
+			logn5("Circuit::Partial_Equilibrate deficit négatif "+U::to_s(*station)+" : "+U::to_s(station->deficit()));
 			if(this->remorque->capa - charge_courante_max > -station->deficit()){
-				logn2("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max > -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
+				logn5("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max > -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
 				charge_courante_max += -station->deficit();
 				charge_courante_min += -station->deficit();
 			}
 			else{
-				logn2("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max <= -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
+				logn5("Circuit::Partial_Equilibrate this->remorque->capa - charge_courante_max <= -station->deficit() charge_courante_max : "+U::to_s(charge_courante_max));
 				charge_init_max -= -station->deficit() - (this->remorque->capa - charge_courante_max);
 				charge_courante_min += -station->deficit();
 				charge_courante_max = this->remorque->capa;
 				if(charge_init_max <= charge_init_min){
-					logn2("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
+					logn5("Circuit::Partial_Equilibrate charge_courante_max <= charge_courante_min (charge_courante_min,charge_courante_max) : ("
 							+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
 					if(first_iteration)
 						stationAddedAsFirstOF2Part = true;
@@ -545,16 +545,16 @@ int Circuit::Partial_equilibrate_First_Station(Station* s, list<Station*>::itera
 				}
 			}
 		}
-		logn2("Circuit::Partial_Equilibrate (charge_courante_min,charge_courante_max) : "
+		logn5("Circuit::Partial_Equilibrate (charge_courante_min,charge_courante_max) : "
 									+U::to_s(charge_courante_min)+","+U::to_s(charge_courante_max)+")");
-		logn2("Circuit::Partial_Equilibrate (charge_init_min,charge_init_max) : "
+		logn5("Circuit::Partial_Equilibrate (charge_init_min,charge_init_max) : "
 									+U::to_s(charge_init_min)+","+U::to_s(charge_init_max)+")");
 		//cout << "Stations : " << U::to_s(*station) << endl;
 		//cout << *this << endl;
 		if(first_iteration)
 			first_iteration = false;
 		else{
-			logn2("Circuit::Partial_equilibre iterator increase");
+			logn5("Circuit::Partial_equilibre iterator increase");
 			it++;
 		}
 		if(it == this->stations->end())
@@ -571,13 +571,13 @@ void Circuit::maj_Depots(){
 	bool SecondPart = false;
     auto charge_courante = this->charge_init;
     this->desequilibre = 0;
-    logn3("Circuit::maj_depot START");
+    logn5("Circuit::maj_depot START");
     int iterateur = 1;
     for (auto it = this->stations->begin(); it != this->stations->end(); ++it) {
     	Station* station = *it;
-    	logn3("Circuit::maj_depot charge_courante : " + U::to_s(charge_courante));
-    	logn3("Circuit::maj_depot deficit : " + U::to_s(station->deficit()));
-    	logn3("Circuit::maj_depot de la station : " + U::to_s(*station));
+    	logn5("Circuit::maj_depot charge_courante : " + U::to_s(charge_courante));
+    	logn5("Circuit::maj_depot deficit : " + U::to_s(station->deficit()));
+    	logn5("Circuit::maj_depot de la station : " + U::to_s(*station));
     	if(station->deficit() > 0){
     		if (charge_courante >= station->deficit()){
     			(*this->desequilibre_courant)[station] = 0;
@@ -600,7 +600,7 @@ void Circuit::maj_Depots(){
     	}
     	else{
     		if (this->remorque->capa - charge_courante >= -station->deficit()){
-    			logn3("Circuit::majDepot remrque_capa : "+U::to_s(this->remorque->capa));
+    			logn5("Circuit::majDepot remrque_capa : "+U::to_s(this->remorque->capa));
     			(*this->desequilibre_courant)[station] = 0;
     			(*this->depots)[station] = station->deficit();
     		    }
@@ -654,7 +654,7 @@ void Circuit::maj_Depots(){
     		U::die("circuit::equilibrate charge_courante>capa deficit : " + U::to_s(station->deficit()) + " charge_courante : " + U::to_s(charge_courante) + " capa : " + U::to_s(station->capa));
 
     	// incrémentation du desequilibre du circuit
-        logn3("Circuit::majDepot end, desequilibre : "+ U::to_s(this->desequilibre));
+        logn5("Circuit::majDepot end, desequilibre : "+ U::to_s(this->desequilibre));
 
 
     }
@@ -1193,7 +1193,7 @@ int Circuit::my_insertTotalCost(Station* s, int& Best_iterateur){
 }
 
 int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& it2insert){
-	logn2("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
+	logn5("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
 	bool SecondPartExiste, stationAddedAsFirstOf2Part;
 	list<Station*>::iterator it_second_part;
 	int deficit_from_partial_update;
@@ -1223,7 +1223,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 		auto it_start = it_second_part;
 
 		if(stationAddedAsFirstOf2Part){
-			logn2("Circuit::my_insertFirstPart To SecondPart");
+			logn5("Circuit::my_insertFirstPart To SecondPart");
 			//return this->my_insertSecondPart(s,it2insert);
 		}
 
@@ -1354,7 +1354,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 						if(deficit_a_absorber < 0)
 							U::die("Circuit::my_insertFirst insert4");//normalement ça n'arrive pas
 
-						logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 				else if(desequilibre_courant == 0){
@@ -1363,7 +1363,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 						desequilibre_courant += -deficit_a_absorber - charge_courante;
 						deficit_a_absorber -= -(-deficit_a_absorber - charge_courante);//deficit a absorber negatif d'où le moins
 
-						logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car on le fait apres*/
 
 				}
@@ -1372,13 +1372,13 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 						desequilibre_circuit -= -deficit_a_absorber;
 						desequilibre_courant -= -deficit_a_absorber;
 						deficit_a_absorber = 0;
-						logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						desequilibre_circuit -= -desequilibre_courant;
 						deficit_a_absorber -= desequilibre_courant;
 						desequilibre_courant = 0;
-						logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 
@@ -1396,10 +1396,10 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 
 
 					}
-					logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
-					logn2("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-					logn2("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
-					logn2("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
+					logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+					logn5("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
+					logn5("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
 				}
 				else if(desequilibre_courant == 0){
 					if(this->remorque->capa - charge_courante < deficit_a_absorber){
@@ -1407,7 +1407,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 						desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante);
 						desequilibre_courant -= deficit_a_absorber - (this->remorque->capa - charge_courante);
 						deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante);
-						logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 				}
 				else{
@@ -1416,7 +1416,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 						desequilibre_courant -= deficit_a_absorber;
 						deficit_a_absorber = 0;
 
-						logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						if(charge_courante + deficit_a_absorber - desequilibre_courant >= 0){
@@ -1424,17 +1424,17 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 							deficit_a_absorber -= desequilibre_courant;
 							desequilibre_courant = 0;
 
-							logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 						}
 						else{
 							desequilibre_circuit -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							auto tmp = desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							deficit_a_absorber -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							desequilibre_courant -= tmp;
-							logn2("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
-							logn2("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-							logn2("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
-							logn2("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
+							logn5("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+							logn5("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
+							logn5("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
 						}
 					}
 				}
@@ -1500,7 +1500,7 @@ int Circuit::my_insertFirstPartCost(Station* s, const list<Station*>::iterator& 
 
 
 int Circuit::my_insertFirstPartCost_First_Station(Station* s){
-	logn2("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
+	logn5("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
 	bool SecondPartExiste, stationAddedAsFirstOf2Part;
 	list<Station*>::iterator it_second_part;
 	int deficit_from_partial_update;//deficit à absorber engendré par l'insertion
@@ -1530,7 +1530,7 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 		auto it_start = it_second_part;
 
 		if(stationAddedAsFirstOf2Part){
-			logn2("Circuit::my_insertFirstPart To SecondPart");
+			logn5("Circuit::my_insertFirstPart To SecondPart");
 			deficit_a_absorber -= charge_init_old-charge_init_new;
 			desequilibre_circuit += s->deficit() - (charge_init_new - charge_init_old);
 			//return this->my_insertSecondPart(s,it2insert);
@@ -1659,14 +1659,14 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						deficit_a_absorber -= -(desequilibre_courant);
 						desequilibre_courant = 0;
 
-						logn2("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
-						logn2("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
-						logn2("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
+						logn5("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
+						logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
 
 						if(deficit_a_absorber < 0)
 							U::die("Circuit::my_insertFirstFirst insert4");//normalement ça n'arrive pas
 
-						logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 				else if(desequilibre_courant == 0){
@@ -1675,7 +1675,7 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						desequilibre_courant += -deficit_a_absorber - charge_courante;
 						deficit_a_absorber -= -(-deficit_a_absorber - charge_courante);//deficit a absorber negatif d'où le moins
 
-						logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car on le fait apres*/
 
 				}
@@ -1684,13 +1684,13 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						desequilibre_circuit -= -deficit_a_absorber;
 						desequilibre_courant -= -deficit_a_absorber;
 						deficit_a_absorber = 0;
-						logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						desequilibre_circuit -= -desequilibre_courant;
 						deficit_a_absorber -= desequilibre_courant;
 						desequilibre_courant = 0;
-						logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 
@@ -1708,10 +1708,10 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 
 
 					}
-					logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
-					logn2("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-					logn2("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
-					logn2("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
+					logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+					logn5("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
+					logn5("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
 				}
 				else if(desequilibre_courant == 0){
 					if(this->remorque->capa - charge_courante < deficit_a_absorber){
@@ -1719,7 +1719,7 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante);
 						desequilibre_courant -= deficit_a_absorber - (this->remorque->capa - charge_courante);
 						deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante);
-						logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 				}
 				else{
@@ -1728,7 +1728,7 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 						desequilibre_courant -= deficit_a_absorber;
 						deficit_a_absorber = 0;
 
-						logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						if(charge_courante + deficit_a_absorber - desequilibre_courant >= 0){
@@ -1736,17 +1736,17 @@ int Circuit::my_insertFirstPartCost_First_Station(Station* s){
 							deficit_a_absorber -= desequilibre_courant;
 							desequilibre_courant = 0;
 
-							logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 						}
 						else{
 							desequilibre_circuit -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							auto tmp = desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							deficit_a_absorber -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							desequilibre_courant -= tmp;
-							logn2("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
-							logn2("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-							logn2("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
-							logn2("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
+							logn5("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+							logn5("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
+							logn5("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
 						}
 					}
 				}
@@ -1832,7 +1832,7 @@ int Circuit::my_insertSecondPartCost(Station* s, const list<Station*>::iterator&
 		if(s->deficit() > charge_courante_old){//l'ancienne charge n'est pas suffisante
 			charge_courante_new = 0;
 			desequilibre_circuit += s->deficit() - charge_courante_old;//le surplus passe en déséquilibre
-			logn2("Circuit::my_insertSecondPart desequilibre1 : "+U::to_s(desequilibre_circuit));
+			logn5("Circuit::my_insertSecondPart desequilibre1 : "+U::to_s(desequilibre_circuit));
 		}
 		else
 			charge_courante_new = charge_courante_old - s->deficit();//la charge_old peut absorber le deficit
@@ -1841,7 +1841,7 @@ int Circuit::my_insertSecondPartCost(Station* s, const list<Station*>::iterator&
 		if(-s->deficit() > this->remorque->capa - charge_courante_old){//il n'y a pas assez de place dans la remorque
 			charge_courante_new = this->remorque->capa;
 			desequilibre_circuit += -s->deficit() - (this->remorque->capa - charge_courante_old);
-			logn2("Circuit::my_insertSecondPart desequilibre2 : "+U::to_s(desequilibre_circuit));
+			logn5("Circuit::my_insertSecondPart desequilibre2 : "+U::to_s(desequilibre_circuit));
 		}
 		else
 			charge_courante_new = charge_courante_old + (-s->deficit());//le charge old permet d'absorber le deficit
@@ -1874,25 +1874,25 @@ int Circuit::my_insertSecondPartCost(Station* s, const list<Station*>::iterator&
 			if(desequilibre_courant > 0){
 				desequilibre_circuit += -deficit_a_absorber;
 				deficit_a_absorber = 0;
-				logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+				logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 			}
 			else if(desequilibre_courant == 0){
 				if(charge_courante_min < -deficit_a_absorber){
 					desequilibre_circuit += -deficit_a_absorber - charge_courante_min;
 					deficit_a_absorber -= -(-deficit_a_absorber - charge_courante_min);//deficit a absorber negatif d'où le moins
-					logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 				}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 			}
 			else{
 				if(-desequilibre_courant > -deficit_a_absorber){
 					desequilibre_circuit -= -deficit_a_absorber;
 					deficit_a_absorber = 0;
-					logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 				else{
 					desequilibre_circuit -= -desequilibre_courant;
 					deficit_a_absorber -= desequilibre_courant;
-					logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 			}
 
@@ -1902,25 +1902,25 @@ int Circuit::my_insertSecondPartCost(Station* s, const list<Station*>::iterator&
 			if(desequilibre_courant < 0){
 				desequilibre_circuit += deficit_a_absorber;
 				deficit_a_absorber = 0;
-				logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+				logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
 			}
 			else if(desequilibre_courant == 0){
 				if(this->remorque->capa - charge_courante_min < deficit_a_absorber){
 					desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante_min);
 					deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante_min);
-					logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 				}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 			}
 			else{
 				if(desequilibre_courant > deficit_a_absorber){
 					desequilibre_circuit -= deficit_a_absorber;
 					deficit_a_absorber = 0;
-					logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 				else{
 					desequilibre_circuit -= desequilibre_courant;
 					deficit_a_absorber -= desequilibre_courant;
-					logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 			}
 
@@ -1967,7 +1967,7 @@ int Circuit::compute_cost(Station* s, int desequilibre){
 
 
 int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::iterator& it2insert){
-	logn2("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
+	logn5("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
 	bool SecondPartExiste, stationAddedAsFirstOf2Part;
 	list<Station*>::iterator it_second_part;
 	int deficit_from_partial_update;
@@ -1997,7 +1997,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 		auto it_start = it_second_part;
 
 		if(stationAddedAsFirstOf2Part){
-			logn2("Circuit::my_insertFirstPart To SecondPart");
+			logn5("Circuit::my_insertFirstPart To SecondPart");
 			//return this->my_insertSecondPart(s,it2insert);
 		}
 
@@ -2128,7 +2128,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 						if(deficit_a_absorber < 0)
 							U::die("Circuit::my_insertFirst insert4");//normalement ça n'arrive pas
 
-						logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 				else if(desequilibre_courant == 0){
@@ -2137,7 +2137,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 						desequilibre_courant += -deficit_a_absorber - charge_courante;
 						deficit_a_absorber -= -(-deficit_a_absorber - charge_courante);//deficit a absorber negatif d'où le moins
 
-						logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car on le fait apres*/
 
 				}
@@ -2146,13 +2146,13 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 						desequilibre_circuit -= -deficit_a_absorber;
 						desequilibre_courant -= -deficit_a_absorber;
 						deficit_a_absorber = 0;
-						logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						desequilibre_circuit -= -desequilibre_courant;
 						deficit_a_absorber -= desequilibre_courant;
 						desequilibre_courant = 0;
-						logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 
@@ -2170,10 +2170,10 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 
 
 					}
-					logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
-					logn2("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-					logn2("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
-					logn2("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
+					logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+					logn5("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
+					logn5("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
 				}
 				else if(desequilibre_courant == 0){
 					if(this->remorque->capa - charge_courante < deficit_a_absorber){
@@ -2181,7 +2181,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 						desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante);
 						desequilibre_courant -= deficit_a_absorber - (this->remorque->capa - charge_courante);
 						deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante);
-						logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 				}
 				else{
@@ -2190,7 +2190,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 						desequilibre_courant -= deficit_a_absorber;
 						deficit_a_absorber = 0;
 
-						logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						if(charge_courante + deficit_a_absorber - desequilibre_courant >= 0){
@@ -2198,17 +2198,17 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 							deficit_a_absorber -= desequilibre_courant;
 							desequilibre_courant = 0;
 
-							logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 						}
 						else{
 							desequilibre_circuit -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							auto tmp = desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							deficit_a_absorber -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							desequilibre_courant -= tmp;
-							logn2("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
-							logn2("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-							logn2("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
-							logn2("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
+							logn5("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+							logn5("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
+							logn5("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
 						}
 					}
 				}
@@ -2274,7 +2274,7 @@ int Circuit::my_insertFirstPartTotalCost(Station* s, const list<Station*>::itera
 
 
 int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
-	logn2("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
+	logn5("Circuit::my_insertFirstPart insertion de : "+U::to_s(*s));
 	bool SecondPartExiste, stationAddedAsFirstOf2Part;
 	list<Station*>::iterator it_second_part;
 	int deficit_from_partial_update;//deficit à absorber engendré par l'insertion
@@ -2304,7 +2304,7 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 		auto it_start = it_second_part;
 
 		if(stationAddedAsFirstOf2Part){
-			logn2("Circuit::my_insertFirstPart To SecondPart");
+			logn5("Circuit::my_insertFirstPart To SecondPart");
 			deficit_a_absorber -= charge_init_old-charge_init_new;
 			desequilibre_circuit += s->deficit() - (charge_init_new - charge_init_old);
 			//return this->my_insertSecondPart(s,it2insert);
@@ -2433,14 +2433,14 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 						deficit_a_absorber -= -(desequilibre_courant);
 						desequilibre_courant = 0;
 
-						logn2("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
-						logn2("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
-						logn2("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
+						logn5("Circuit::my_insertb deficit a absorber : "+U::to_s(deficit_a_absorber));
+						logn5("Circuit::my_insert desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert charge_courante : "+U::to_s(charge_courante));
 
 						if(deficit_a_absorber < 0)
 							U::die("Circuit::my_insertFirstFirst insert4");//normalement ça n'arrive pas
 
-						logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 				else if(desequilibre_courant == 0){
@@ -2449,7 +2449,7 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 						desequilibre_courant += -deficit_a_absorber - charge_courante;
 						deficit_a_absorber -= -(-deficit_a_absorber - charge_courante);//deficit a absorber negatif d'où le moins
 
-						logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car on le fait apres*/
 
 				}
@@ -2458,13 +2458,13 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 						desequilibre_circuit -= -deficit_a_absorber;
 						desequilibre_courant -= -deficit_a_absorber;
 						deficit_a_absorber = 0;
-						logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						desequilibre_circuit -= -desequilibre_courant;
 						deficit_a_absorber -= desequilibre_courant;
 						desequilibre_courant = 0;
-						logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 				}
 
@@ -2482,10 +2482,10 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 
 
 					}
-					logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
-					logn2("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-					logn2("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
-					logn2("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
+					logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert8 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+					logn5("Circuit::my_insert8 charge_courante : "+U::to_s(charge_courante));
+					logn5("Circuit::my_insert8 desequilibre_courant : "+U::to_s(desequilibre_courant));
 				}
 				else if(desequilibre_courant == 0){
 					if(this->remorque->capa - charge_courante < deficit_a_absorber){
@@ -2493,7 +2493,7 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 						desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante);
 						desequilibre_courant -= deficit_a_absorber - (this->remorque->capa - charge_courante);
 						deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante);
-						logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 					}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 				}
 				else{
@@ -2502,7 +2502,7 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 						desequilibre_courant -= deficit_a_absorber;
 						deficit_a_absorber = 0;
 
-						logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+						logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 					}
 					else{
 						if(charge_courante + deficit_a_absorber - desequilibre_courant >= 0){
@@ -2510,17 +2510,17 @@ int Circuit::my_insertFirstPartTotalCost_First_Station(Station* s){
 							deficit_a_absorber -= desequilibre_courant;
 							desequilibre_courant = 0;
 
-							logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 						}
 						else{
 							desequilibre_circuit -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							auto tmp = desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							deficit_a_absorber -= desequilibre_courant + (charge_courante + deficit_a_absorber - desequilibre_courant);
 							desequilibre_courant -= tmp;
-							logn2("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
-							logn2("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
-							logn2("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
-							logn2("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
+							logn5("Circuit::my_insert12 desequilibre : "+U::to_s(desequilibre_circuit));
+							logn5("Circuit::my_insert12 deficit_a_absorber : "+U::to_s(deficit_a_absorber));
+							logn5("Circuit::my_insert12 charge_courante : "+U::to_s(charge_courante));
+							logn5("Circuit::my_insert12 desequilibre_courant : "+U::to_s(desequilibre_courant));
 						}
 					}
 				}
@@ -2606,7 +2606,7 @@ int Circuit::my_insertSecondPartTotalCost(Station* s, const list<Station*>::iter
 		if(s->deficit() > charge_courante_old){//l'ancienne charge n'est pas suffisante
 			charge_courante_new = 0;
 			desequilibre_circuit += s->deficit() - charge_courante_old;//le surplus passe en déséquilibre
-			logn2("Circuit::my_insertSecondPart desequilibre1 : "+U::to_s(desequilibre_circuit));
+			logn5("Circuit::my_insertSecondPart desequilibre1 : "+U::to_s(desequilibre_circuit));
 		}
 		else
 			charge_courante_new = charge_courante_old - s->deficit();//la charge_old peut absorber le deficit
@@ -2615,7 +2615,7 @@ int Circuit::my_insertSecondPartTotalCost(Station* s, const list<Station*>::iter
 		if(-s->deficit() > this->remorque->capa - charge_courante_old){//il n'y a pas assez de place dans la remorque
 			charge_courante_new = this->remorque->capa;
 			desequilibre_circuit += -s->deficit() - (this->remorque->capa - charge_courante_old);
-			logn2("Circuit::my_insertSecondPart desequilibre2 : "+U::to_s(desequilibre_circuit));
+			logn5("Circuit::my_insertSecondPart desequilibre2 : "+U::to_s(desequilibre_circuit));
 		}
 		else
 			charge_courante_new = charge_courante_old + (-s->deficit());//le charge old permet d'absorber le deficit
@@ -2648,25 +2648,25 @@ int Circuit::my_insertSecondPartTotalCost(Station* s, const list<Station*>::iter
 			if(desequilibre_courant > 0){
 				desequilibre_circuit += -deficit_a_absorber;
 				deficit_a_absorber = 0;
-				logn2("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
+				logn5("Circuit::my_insert4 desequilibre : "+U::to_s(desequilibre_circuit));
 			}
 			else if(desequilibre_courant == 0){
 				if(charge_courante_min < -deficit_a_absorber){
 					desequilibre_circuit += -deficit_a_absorber - charge_courante_min;
 					deficit_a_absorber -= -(-deficit_a_absorber - charge_courante_min);//deficit a absorber negatif d'où le moins
-					logn2("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert5 desequilibre : "+U::to_s(desequilibre_circuit));
 				}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 			}
 			else{
 				if(-desequilibre_courant > -deficit_a_absorber){
 					desequilibre_circuit -= -deficit_a_absorber;
 					deficit_a_absorber = 0;
-					logn2("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert6 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 				else{
 					desequilibre_circuit -= -desequilibre_courant;
 					deficit_a_absorber -= desequilibre_courant;
-					logn2("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert7 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 			}
 
@@ -2676,25 +2676,25 @@ int Circuit::my_insertSecondPartTotalCost(Station* s, const list<Station*>::iter
 			if(desequilibre_courant < 0){
 				desequilibre_circuit += deficit_a_absorber;
 				deficit_a_absorber = 0;
-				logn2("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
+				logn5("Circuit::my_insert8 desequilibre : "+U::to_s(desequilibre_circuit));
 			}
 			else if(desequilibre_courant == 0){
 				if(this->remorque->capa - charge_courante_min < deficit_a_absorber){
 					desequilibre_circuit += deficit_a_absorber - (this->remorque->capa - charge_courante_min);
 					deficit_a_absorber -= deficit_a_absorber - (this->remorque->capa - charge_courante_min);
-					logn2("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert9 desequilibre : "+U::to_s(desequilibre_circuit));
 				}/*pas besoin de mettre a jour la charge_courante_min car en s'en resert pas*/
 			}
 			else{
 				if(desequilibre_courant > deficit_a_absorber){
 					desequilibre_circuit -= deficit_a_absorber;
 					deficit_a_absorber = 0;
-					logn2("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert10 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 				else{
 					desequilibre_circuit -= desequilibre_courant;
 					deficit_a_absorber -= desequilibre_courant;
-					logn2("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
+					logn5("Circuit::my_insert11 desequilibre : "+U::to_s(desequilibre_circuit));
 				}
 			}
 

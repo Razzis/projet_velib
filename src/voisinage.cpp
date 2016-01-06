@@ -235,9 +235,10 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
     while (src != circuit->stations->back() && circuit->stations->size()!=1) {
     	st++;
         Station* dst = *st;
-        proba[src] = circuit->inst->get_dist(src, dst) + proba[src];
-        proba[dst] = circuit->inst->get_dist(src, dst) + proba[dst];
-        sum_proba = sum_proba + 2*circuit->inst->get_dist(src, dst);
+        int tmp_dist = circuit->inst->get_dist(src, dst);
+        proba[src] = tmp_dist + proba[src];
+        proba[dst] = tmp_dist + proba[dst];
+        sum_proba = sum_proba + 2*tmp_dist;
         sum_proba = sum_proba - circuit->inst->min_dists[src];
         src = dst;
 	}
