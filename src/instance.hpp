@@ -92,6 +92,8 @@ public:
     int get_dist(list<Station*>* stations, Remorque* remorque = NULL);
 
 
+    map<Station*,double> min_dists;
+    void compute_min_dists(map<Station*,double> &min_dists);
 
     // // Mélange le conteneur de classe list passé en parametre
     // // Principe :

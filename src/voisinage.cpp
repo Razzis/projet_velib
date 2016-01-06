@@ -4,8 +4,7 @@
 
 void exchange( Solution* solution, Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
 	// rq : on passe le solution en arg pour faire des partial update plus rapide, sinon pas beosin
-
-    int old_desequilibre_c1 = circuit1->desequilibre;
+	int old_desequilibre_c1 = circuit1->desequilibre;
     int old_length_c1 = circuit1->length;
     int old_desequilibre_c2 = circuit2->desequilibre;
     int old_length_c2 = circuit2->length;
@@ -44,9 +43,10 @@ void exchange( Solution* solution, Circuit* circuit1, Circuit* circuit2, int pos
 void take( Solution* solution, Circuit* circuit1, int pos1, int pos2, Circuit* circuit2, int pos3 ) {
 
 	int old_desequilibre_c1 = circuit1->desequilibre;
-	int old_length_c1 = circuit1->length;
-	int old_desequilibre_c2 = circuit2->desequilibre;
-	int old_length_c2 = circuit2->length;
+    int old_length_c1 = circuit1->length;
+    int old_desequilibre_c2 = circuit2->desequilibre;
+    int old_length_c2 = circuit2->length;
+
 
 	auto it1 = circuit1->stations->begin();
     for (int i = 0; i < pos1; ++i) {
@@ -72,7 +72,9 @@ void take( Solution* solution, Circuit* circuit1, int pos1, int pos2, Circuit* c
 void move( Solution* solution, Circuit* circuit, int pos1, int pos2, int pos3 ) {
 
 	int old_desequilibre = circuit->desequilibre;
-	int old_length = circuit->length;
+    int old_length = circuit->length;
+
+
 
 	auto it1 = circuit->stations->begin();
     for (int i = 0; i < pos1; ++i) {
@@ -104,7 +106,7 @@ void move( Solution* solution, Circuit* circuit, int pos1, int pos2, int pos3 ) 
 void reverse( Solution* solution, Circuit* circuit, int pos1, int pos2 ) {
 
 	int old_desequilibre = circuit->desequilibre;
-	int old_length = circuit->length;
+    int old_length = circuit->length;
 
 	auto it2 = circuit->stations->begin();
     for (int i = 0; i < pos2; ++i) {
@@ -132,7 +134,6 @@ Solution* select_voisin( Solution* solution, Solution* voisin ) {
 	// on tire 2 circuits au hasard
 	int circuit_id1 = rand() % voisin->circuits->size();
 	int circuit_id2 = rand() % voisin->circuits->size();
-
 
 	if (circuit_id1 != circuit_id2) {
 		// si les 2 circuits sont distincts, on va prendre des stations � l'un pour les donner � l'autre
@@ -181,6 +182,8 @@ Solution* select_voisin( Solution* solution, Solution* voisin ) {
 			int pos2 = select_station(circuit, proba);
 			int pos3 = select_station(circuit, proba);
 
+			// move(voisin, circuit, pos1,pos1,pos2);
+
 			// move (s'assurer de l'ordre valide des int pos)
 			if (pos3<=min(pos1,pos2) || pos3>=max(pos1,pos2)) {
 				move( voisin, circuit, min(pos1,pos2), max(pos1,pos2), pos3 );
@@ -223,42 +226,6 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
 
 	double sum_proba = 0.0;
 
-	// ce gros caca est hyperlourd en calcul mais peut �tre fait � la cr�ation de l'instance,
-	// en gros faut que je le d�place ********************************************************
-	int min_dist = 9999999;
-	Site* here;
-	Site* a;
-	Site* b;
-	Site* c;
-	Station* hereaussi;
-	for ( auto it = circuit->stations->begin(); it != circuit->stations->end(); it++ ) {
-		here = *it;
-		min_dist = 9999999;
-		for ( auto jt = circuit->inst->stations->begin(); jt != circuit->inst->stations->end(); jt++) {
-		  	a = *jt;
-			for ( auto kt = circuit->inst->stations->begin(); kt != circuit->inst->stations->end(); kt++) {
-		  		b = *kt;
-		  		if (a!=here && b!=here && a!=b) {
-		    		//min_dist = (*this->inst->dists_grid)[here->sid * this->inst->nb_sites + s->sid];
-		    		min_dist = min(min_dist, circuit->inst->get_dist(here,a)+circuit->inst->get_dist(here,b));
-		  		}
-		  	}
-		  	for (auto rq = circuit->inst->remorques->begin(); rq != circuit->inst->remorques->end(); rq++) {
-		  		c = *rq;
-		  		if (a!=here) {
-		  			min_dist = min(min_dist, circuit->inst->get_dist(here,a)+circuit->inst->get_dist(here,c));
-		  			//min_dist = min(min_dist, circuit->inst->get_dist(here,c)+circuit->inst->get_dist(here,c));
-		  		}
-		  	}
-		}
-		sum_proba = sum_proba - min_dist;
-		hereaussi = *it;
-		proba[hereaussi] = -min_dist;
-	}
-	// ******************************************************************************************
-
-
-
 	// ce bout de caca ci est aussi trop lourd sur les grosses instances, mais lui il doit �tre recalcul� ici � chaque fois...
 	Station* src = *circuit->stations->begin();
 	auto st = circuit->stations->begin();
@@ -271,6 +238,7 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
         proba[src] = circuit->inst->get_dist(src, dst) + proba[src];
         proba[dst] = circuit->inst->get_dist(src, dst) + proba[dst];
         sum_proba = sum_proba + 2*circuit->inst->get_dist(src, dst);
+        sum_proba = sum_proba - circuit->inst->min_dists[src];
         src = dst;
 	}
 	proba[src] = circuit->inst->get_dist(src, circuit->remorque) + proba[src];
@@ -278,7 +246,7 @@ void compute_proba_circuit(Circuit* circuit, map<Station*, double> &proba) {
 
 	for ( auto it = circuit->stations->begin(); it != circuit->stations->end(); it++ ) {
 		Station* hereaussi = *it;
-		proba[hereaussi] = double(proba[hereaussi]+1)/(double(sum_proba)+double(circuit->stations->size()));
+		proba[hereaussi] = double(proba[hereaussi]-circuit->inst->min_dists[hereaussi]+1)/(double(sum_proba)+double(circuit->stations->size()));
 	}
 }
 
@@ -310,7 +278,13 @@ int select_station( Circuit* circuit, map<Station*,double> &proba) {
 
 
 
+// void update_proba( map<Station*,double> &proba, Circuit* c1, Circuit* c2, int pos1, int pos2, int pos3 = -1 ) {
 
+// 	st1 = c1->stations->at(pos1);
+// 	st2 = c2->stations->at(pos2);
+
+
+// }
 
 
 

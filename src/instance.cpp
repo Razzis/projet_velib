@@ -20,11 +20,19 @@ void Instance::init() {
 }
 
 Instance::Instance() {
+	arcs = new vector<Arc*>();
+	stations = new vector<Station*>();
+	remorques = new vector<Remorque*>();
+	sites = new vector<Site*>();
     this->init();
 }
 
 /// Instance::Instance(string filename, Args* args) {
 Instance::Instance(string filename, Options* args) {
+	arcs = new vector<Arc*>();
+	stations = new vector<Station*>();
+	remorques = new vector<Remorque*>();
+	sites = new vector<Site*>();
     this->init();
     this->filename = filename;
     this->args = args;
@@ -447,6 +455,41 @@ Instance* Instance::new_velib_mini() {
     sort(inst->remorques->begin(), inst->remorques->end(), Site::compareByName);
 
     return inst;
+}
+
+
+
+
+
+void Instance::compute_min_dists(map<Station*,double> &min_dists) {
+    int min_dist = 9999999;
+    Site* here;
+    Site* a;
+    Site* b;
+    Site* c;
+    Station* hereaussi;
+    for ( auto it = this->stations->begin(); it != this->stations->end(); it++ ) {
+        here = *it;
+        min_dist = 9999999;
+        for ( auto jt = this->stations->begin(); jt != this->stations->end(); jt++) {
+            a = *jt;
+            for ( auto kt = this->stations->begin(); kt != this->stations->end(); kt++) {
+                b = *kt;
+                if (a!=here && b!=here && a!=b) {
+                    min_dist = min(min_dist, this->get_dist(here,a)+this->get_dist(here,b));
+                }
+            }
+            for (auto rq = this->remorques->begin(); rq != this->remorques->end(); rq++) {
+                c = *rq;
+                if (a!=here) {
+                    min_dist = min(min_dist, this->get_dist(here,a)+this->get_dist(here,c));
+                    min_dist = min(min_dist, this->get_dist(here,c)+this->get_dist(here,c));
+                }
+            }
+        }
+        hereaussi = *it;
+        min_dists[hereaussi] = -min_dist;
+    }
 }
 
 //./

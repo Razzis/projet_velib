@@ -10,7 +10,6 @@ GreedySolver::GreedySolver(Instance* inst) : Solver::Solver(inst) {
 	this->solution = new Solution(inst);
     name = "GreedySolver";
     desc = "Solver par méthode glouton (intelligent)";
-    cerr << "\nGreedySolver non implémenté : AU BOULOT !" << endl;
     logn1(name + ": " + desc + " inst: " + inst->name);
 
 
@@ -30,7 +29,7 @@ bool GreedySolver::solve() {
 
     Solution tmp_sol = Solution(inst);
 
-    cout << "debut du remplissage des remorques" << endl;
+    //cout << "debut du remplissage des remorques" << endl;
 
 
 
@@ -70,16 +69,16 @@ bool GreedySolver::solve() {
 		std::sort (station_list_neg->begin(), station_list_neg->end(), compare_station);
 		//std::reverse(station_list_neg->begin(), station_list_neg->end());
 
-		for(auto it = station_list_pos->begin(); it != station_list_pos->end(); ++it){
+		/*for(auto it = station_list_pos->begin(); it != station_list_pos->end(); ++it){
 			Station* station = *it;
-			cout << "station_pos " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
+			//cout << "station_pos " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
 		}
 		for(auto it = station_list_neg->begin(); it != station_list_neg->end(); ++it){
 			Station* station = *it;
-			cout << "station_neg " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
+			//cout << "station_neg " << U::to_s(*station) << " of deficit : " << station->deficit() << endl;
 		}
-		cout << "pos size : " << station_list_pos->size() << endl;
-		cout << "neg size : " << station_list_neg->size() << endl;
+		//cout << "pos size : " << station_list_pos->size() << endl;
+		//cout << "neg size : " << station_list_neg->size() << endl;*/
         	/*U::die("test");*/
     }else if(schooser == "SORTED"){
     	station_list = inst->stations;
@@ -119,7 +118,7 @@ bool GreedySolver::solve() {
 
 
 
-    	logn1("GreedySolver::solve ajout de la station : "+U::to_s(iterateur));
+    	logn3("GreedySolver::solve ajout de la station : "+U::to_s(iterateur));
     	iterateur++;
 
     	vector<Circuit*>* circuit_list;
@@ -367,11 +366,11 @@ bool GreedySolver::solve() {
 		if(sinserter == "DOUBLE" || sinserter == "DOUBLE_MYINSERT") {
 			if(pos_deficit_choosed){//on recupère la station concerné
 				station = (station_list_pos->at(iterateur_pos));
-				cout << "station choosed pos : " << U::to_s(*station) << endl;
+				//cout << "station choosed pos : " << U::to_s(*station) << endl;
 			}
 			else{
 				station = (station_list_neg->at(iterateur_neg));
-				cout << "station choosed pos : " << U::to_s(*station) << endl;
+				//cout << "station choosed pos : " << U::to_s(*station) << endl;
 			}
 		}
 
@@ -647,8 +646,8 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 									&& station->deficit() >= 0
 									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
 								desequilibre_a_corriger += station->deficit();
-								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
-								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
+								//cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
+								//cout << "iterateur_last_station : " << iterateur_last_station <<endl;
 								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
 								break_seconde_boucle = true;
 								continue_corection = true;
@@ -681,8 +680,8 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 									&& station->deficit() <= 0
 									&& (U::to_s(*circuit) != U::to_s(*current_circuit))){
 								desequilibre_a_corriger -= -station->deficit();
-								cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
-								cout << "iterateur_last_station : " << iterateur_last_station <<endl;
+								//cout << "iterateur_station_to_move : " << iterateur_station_to_move <<endl;
+								//cout << "iterateur_last_station : " << iterateur_last_station <<endl;
 								move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
 								break_seconde_boucle = true;
 								continue_corection = true;
@@ -726,8 +725,8 @@ void move_glouton(Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
 
     Station* station1 = *it1;
 
-    cout << "move " << U::to_s(*station1) << " from " << U::to_s(*(circuit1->remorque)) << " to "
-    		<< U::to_s(*(circuit2->remorque)) << " in pos : " << pos2 << endl;
+    //cout << "move " << U::to_s(*station1) << " from " << U::to_s(*(circuit1->remorque)) << " to "
+    	//	<< U::to_s(*(circuit2->remorque)) << " in pos : " << pos2 << endl;
 
 	circuit2->insert(station1, pos2);
 
