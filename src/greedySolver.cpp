@@ -461,7 +461,7 @@ bool GreedySolver::Corrige_Greedy(){
     				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
     					Circuit* circuit = *it2;
     					if(circuit->remorque->capa >= abs(Last_station->deficit())){
-							move(current_circuit, circuit,
+							move_glouton(current_circuit, circuit,
 									current_circuit->stations->size()-1, -1);
 
 							current_circuit->update();
@@ -476,7 +476,7 @@ bool GreedySolver::Corrige_Greedy(){
     				for(auto it2 = this->solution->circuits->begin(); it2 != this->solution->circuits->end(); ++it2){// on cherche une remorque de taille suffisate
     					Circuit* circuit = *it2;
     					if(circuit->remorque->capa >= abs(Last_station->deficit())){
-							move(current_circuit, circuit,
+							move_glouton(current_circuit, circuit,
 									current_circuit->stations->size()-1, -1);
 
 							current_circuit->update();
@@ -530,7 +530,7 @@ bool GreedySolver::Corrige_Greedy(){
 									&& desequilibre_courant == 0){
 								charge_courante_positive_finded = true;
 								cout << "ok" << endl;
-								move(current_circuit_charges, current_circuit,
+								move_glouton(current_circuit_charges, current_circuit,
 										current_circuit_charges->stations->size()-1, current_circuit->stations->size()-1);
 								cout << "ko" << endl;
 								this->solution->update();
@@ -572,7 +572,7 @@ bool GreedySolver::Corrige_Greedy(){
 									&& desequilibre_courant == 0){
 								charge_courante_positive_finded = true;
 
-								move(current_circuit_charges, current_circuit,
+								move_glouton(current_circuit_charges, current_circuit,
 										current_circuit_charges->stations->size()-1, current_circuit->stations->size()-1);
 
 								this->solution->update();
@@ -621,7 +621,7 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
     				for(auto it3 = circuit->stations->begin(); it3 != circuit->stations->end(); ++it3){
     					Station* station = *it3;
     					if(station->deficit() == -desequilibre_a_corriger){
-    						move(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
+    						move_glouton(circuit, current_circuit, iterateur_station_to_move, iterateur_last_station);
     						break_seconde_boucle = true;
     						break;
     					}
@@ -643,6 +643,21 @@ bool GreedySolver::Corrige_Greedy_seconde_passe(){
 }
 
 
+void move_glouton(Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 ) {
 
+	auto it1 = circuit1->stations->begin();
+    for (int i = 0; i < pos1; ++i) {
+        it1++;
+    }
+
+    Station* station1 = *it1;
+
+    cout << "move " << U::to_s(*station1) << " from " << U::to_s(*(circuit1->remorque)) << " to "
+    		<< U::to_s(*(circuit2->remorque)) << " in pos : " << pos2 << endl;
+
+	circuit2->insert(station1, pos2);
+	circuit1->stations->erase(it1);
+
+}
 
 //./

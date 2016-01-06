@@ -101,6 +101,6 @@ public:
     virtual bool solve();
     Solution* get_solution() {return this->solution;};
 };
-
+void move_glouton(Circuit* circuit1, Circuit* circuit2, int pos1, int pos2 );
 #endif
 
