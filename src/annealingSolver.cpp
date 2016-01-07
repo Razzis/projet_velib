@@ -208,7 +208,7 @@ Solution* AnnealingSolver::recuit(Solution* solution, double T0, double prog_geo
                     p = (double) exp(-static_cast<double>( voisin->get_cost() - sol->get_cost() )/T );
                     proba = ((double) rand() / (RAND_MAX));
 
-                    if (p<proba) {
+                    if (proba<p && p!=1) {//on garde pas si c'est le même
                         // voisin accepté
                         sol->copy(voisin);
                         if (log2()) {
